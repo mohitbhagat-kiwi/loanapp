@@ -30,6 +30,7 @@ public class SubmitLoanRequestFlow {
         }
 
         @Override
+        @Suspendable
         public SignedTransaction call() throws FlowException {
             this.borrower = getOurIdentity();
 
