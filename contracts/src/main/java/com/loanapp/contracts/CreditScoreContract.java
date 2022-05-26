@@ -12,7 +12,7 @@ public class CreditScoreContract implements Contract {
 
     @Override
     public void verify(@NotNull LedgerTransaction tx) throws IllegalArgumentException {
-        final CommandData commandData = tx.getCommands().get(1).getValue();
+        final CommandData commandData = tx.getCommands().get(0).getValue();
         if (commandData instanceof CreditScoreContract.Commands.Create) {
             requireThat(require -> {
                 /*At here, you can structure the rules for creating a project proposal

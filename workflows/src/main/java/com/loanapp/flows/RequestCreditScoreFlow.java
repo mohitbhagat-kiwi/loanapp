@@ -18,6 +18,7 @@ public class RequestCreditScoreFlow {
         }
 
         @Override
+        @Suspendable
         public Void call() throws FlowException {
             final Party crediBureau = getServiceHub().getNetworkMapCache().getPeerByLegalName(new CordaX500Name("CrediBureau", "Toronto", "CA"));
 
@@ -28,7 +29,7 @@ public class RequestCreditScoreFlow {
         }
     }
 
-    @InitiatedBy(SubmitLoanRequestFlow.Initiator.class)
+    @InitiatedBy(Initiator.class)
     public static class Responder extends FlowLogic<Void>{
         //private variable
         private FlowSession counterpartySession;
@@ -44,7 +45,7 @@ public class RequestCreditScoreFlow {
             UntrustworthyData<String> counterpartyData = counterpartySession.receive(String.class);
 
             final String panNumber = counterpartyData.unwrap(msg -> {
-                assert (msg.length() == 16);
+                assert (msg.length() == 6);
                 return msg;
             });
 

@@ -31,6 +31,7 @@ public class IssueCreditScoreFlow {
         }
 
         @Override
+        @Suspendable
         public SignedTransaction call() throws FlowException {
 
             // Get creditscore from DB based on Pan Number
@@ -38,12 +39,12 @@ public class IssueCreditScoreFlow {
 
             final Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
 
-            final CreditScoreState output = new CreditScoreState(new UniqueIdentifier(), requestingBank, creditScore);
+            final CreditScoreState output = new CreditScoreState(new UniqueIdentifier(), requestingBank,getOurIdentity(), creditScore);
 
             final TransactionBuilder builder = new TransactionBuilder(notary);
 
             builder.addOutputState(output);
-            builder.addCommand(new CreditScoreContract.Commands.Create(), getOurIdentity().getOwningKey());
+            builder.addCommand(new CreditScoreContract.Commands.Create(),  Arrays.asList(getOurIdentity().getOwningKey(),requestingBank.getOwningKey()));
 
             builder.verify(getServiceHub());
             final SignedTransaction ptx = getServiceHub().signInitialTransaction(builder);
@@ -59,7 +60,7 @@ public class IssueCreditScoreFlow {
         }
     }
 
-    @InitiatedBy(SubmitLoanRequestFlow.Initiator.class)
+    @InitiatedBy(Initiator.class)
     public static class Responder extends FlowLogic<Void>{
         //private variable
         private FlowSession counterpartySession;
