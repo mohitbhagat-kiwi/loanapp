@@ -23,13 +23,13 @@ public class LoanRequestState implements LinearState {
     private UniqueIdentifier uniqueIdentifier;
 
     public LoanRequestState(UniqueIdentifier uniqueIdentifier, String panNumber, Party borrower,
-                         int loanAmount, List<Party> lenders) {
+                         int loanAmount, List<Party> lenders,String attachmentId) {
         this.uniqueIdentifier = uniqueIdentifier;
         this.panNumber = panNumber;
         this.borrower = borrower;
         this.loanAmount = loanAmount;
         this.lenders = lenders;
-        this.attachmentId = null;
+        this.attachmentId = attachmentId;
     }
     @NotNull
     @Override
