@@ -11,6 +11,7 @@ import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,7 +36,13 @@ public class IssueCreditScoreFlow {
         public SignedTransaction call() throws FlowException {
 
             // Get creditscore from DB based on Pan Number
-            double creditScore = 252;
+            final CreditScoreDatabaseService databaseService = getServiceHub().cordaService(CreditScoreDatabaseService.class);
+            double creditScore = 0;
+            try {
+                creditScore = databaseService.queryPanNumberValue(panNumber);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
 
             final Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
 
