@@ -15,11 +15,10 @@ import net.corda.core.transactions.TransactionBuilder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SubmitLoanRequestFlow {
+public class RequestLoanFlow {
     @InitiatingFlow
     @StartableByRPC
     public static class Initiator extends FlowLogic<SignedTransaction> {

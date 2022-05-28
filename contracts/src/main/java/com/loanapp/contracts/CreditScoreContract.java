@@ -13,7 +13,7 @@ public class CreditScoreContract implements Contract {
     @Override
     public void verify(@NotNull LedgerTransaction tx) throws IllegalArgumentException {
         final CommandData commandData = tx.getCommands().get(0).getValue();
-        if (commandData instanceof CreditScoreContract.Commands.Create) {
+        if (commandData instanceof Commands.Issue) {
             requireThat(require -> {
                 /*At here, you can structure the rules for creating a project proposal
                  * this verify method makes sure that all proposed projects from the borrower company
@@ -24,6 +24,6 @@ public class CreditScoreContract implements Contract {
     }
 
     public interface Commands extends CommandData {
-        class Create implements CreditScoreContract.Commands {}
+        class Issue implements CreditScoreContract.Commands {}
     }
 }

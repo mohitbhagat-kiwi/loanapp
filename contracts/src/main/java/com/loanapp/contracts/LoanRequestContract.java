@@ -1,6 +1,8 @@
 package com.loanapp.contracts;
 
+import com.loanapp.states.LoanRequestState;
 import net.corda.core.contracts.CommandData;
+import net.corda.core.contracts.CommandWithParties;
 import net.corda.core.contracts.Contract;
 import net.corda.core.transactions.LedgerTransaction;
 import org.jetbrains.annotations.NotNull;
@@ -17,9 +19,14 @@ public class LoanRequestContract implements Contract {
 
         if (commandData instanceof Commands.Request) {
             requireThat(require -> {
-                /*At here, you can structure the rules for creating a project proposal
-                 * this verify method makes sure that all proposed projects from the borrower company
-                 * are sound, so that banks are not going to waste any time on unqualified project proposals*/
+                final CommandWithParties<CommandData> command = tx.getCommands().get(0);
+                if( command.getValue() instanceof  Commands.Request) {
+                    final LoanRequestState out = tx.outputsOfType(LoanRequestState.class).get(0);
+                    // LoanRequest-specific constraints.
+                    require.using("The Loan Amount must be non-negative.", out.getLoanAmount() > 0);
+                    require.using("There should be at least 1 lender", out.getLenders().stream().count() > 0);
+                    require.using("The Loan Amount must be non-negative.", out.getPanNumber().length() == 6);
+                }
                 return null;
             });
         }

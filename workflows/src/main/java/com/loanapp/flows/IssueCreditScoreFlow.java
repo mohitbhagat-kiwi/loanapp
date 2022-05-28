@@ -2,9 +2,7 @@ package com.loanapp.flows;
 
 import co.paralleluniverse.fibers.Suspendable;
 import com.loanapp.contracts.CreditScoreContract;
-import com.loanapp.contracts.LoanRequestContract;
 import com.loanapp.states.CreditScoreState;
-import com.loanapp.states.LoanRequestState;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.flows.*;
 import net.corda.core.identity.Party;
@@ -13,8 +11,6 @@ import net.corda.core.transactions.TransactionBuilder;
 
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class IssueCreditScoreFlow {
@@ -51,7 +47,7 @@ public class IssueCreditScoreFlow {
             final TransactionBuilder builder = new TransactionBuilder(notary);
 
             builder.addOutputState(output);
-            builder.addCommand(new CreditScoreContract.Commands.Create(),  Arrays.asList(getOurIdentity().getOwningKey(),requestingBank.getOwningKey()));
+            builder.addCommand(new CreditScoreContract.Commands.Issue(),  Arrays.asList(getOurIdentity().getOwningKey(),requestingBank.getOwningKey()));
 
             builder.verify(getServiceHub());
             final SignedTransaction ptx = getServiceHub().signInitialTransaction(builder);
