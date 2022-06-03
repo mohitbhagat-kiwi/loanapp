@@ -1,5 +1,7 @@
 package com.loanapp.contracts;
 
+import com.loanapp.states.LoanQuoteState;
+import com.loanapp.states.LoanRequestState;
 import net.corda.core.contracts.CommandData;
 import net.corda.core.contracts.Contract;
 import net.corda.core.transactions.LedgerTransaction;
@@ -12,30 +14,35 @@ public class LoanQuoteContract implements Contract {
     @Override
     public void verify(@NotNull LedgerTransaction tx) throws IllegalArgumentException {
         final CommandData commandData = tx.getCommands().get(0).getValue();
+        final LoanQuoteState out = tx.outputsOfType(LoanQuoteState.class).get(0);
+        requireThat(require -> {
+            require.using("The lender should be a bank", out.getLender()
+                    .getName().getOrganisationUnit().equals("Bank"));
+            return null;
+        });
         if (commandData instanceof LoanQuoteContract.Commands.Process) {
             requireThat(require -> {
-                /*At here, you can structure the rules for creating a project proposal
-                 * this verify method makes sure that all proposed projects from the borrower company
-                 * are sound, so that banks are not going to waste any time on unqualified project proposals*/
+                require.using("The Status should be InProcess or Rejected",
+                        out.getStatus().equals("InProcess") || out.getStatus().equals("Rejected"));
                 return null;
             });
         } else if (commandData instanceof LoanQuoteContract.Commands.Submit) {
+            final LoanQuoteState in = tx.inputsOfType(LoanQuoteState.class).get(0);
             requireThat(require -> {
-                /*At here, you can structure the rules for creating a project proposal
-                 * this verify method makes sure that all proposed projects from the borrower company
-                 * are sound, so that banks are not going to waste any time on unqualified project proposals*/
+                require.using("The Status should be In Process",
+                        in.getStatus().equals("InProcess"));
                 return null;
             });
         } else if (commandData instanceof LoanQuoteContract.Commands.Approve) {
+            final LoanQuoteState in = tx.inputsOfType(LoanQuoteState.class).get(0);
             requireThat(require -> {
-                /*At here, you can structure the rules for creating a project proposal
-                 * this verify method makes sure that all proposed projects from the borrower company
-                 * are sound, so that banks are not going to waste any time on unqualified project proposals*/
+                require.using("The Status should be Submitted",
+                        in.getStatus().equals("Submitted"));
                 return null;
             });
         } else{
             //Unrecognized Command type
-            throw new IllegalArgumentException("Incorrect type of AppleStamp Commands");
+            throw new IllegalArgumentException("Incorrect type of Command");
         }
     }
 

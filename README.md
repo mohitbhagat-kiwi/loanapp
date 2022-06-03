@@ -1,142 +1,99 @@
-<p align="center">
-  <img src="https://www.corda.net/wp-content/uploads/2016/11/fg005_corda_b.png" alt="Corda" width="500">
-</p>
+# Loan Cordapp
 
-# CorDapp Template - Java [<img src="https://raw.githubusercontent.com/corda/samples-java/master/webIDE.png" height=25 />](https://ide.corda.net/?folder=/home/coder/cordapp-template-java)
+This is a sample Cordapp which demonstrate a high level Loan (secured and unsecured) application scenario on a Corda network.
 
-Welcome to the Java CorDapp template. The CorDapp template is a stubbed-out CorDapp that you can use to bootstrap 
-your own CorDapps.
-
-**This is the Java version of the CorDapp template. The Kotlin equivalent is 
-[here](https://github.com/corda/cordapp-template-kotlin/).**
-
-# Pre-Requisites
-
-See https://docs.corda.net/getting-set-up.html.
+This cordapp provides a loan service where a loan applicant via a Broker request multiple retail banks for a quote.
+The retail banks depending on their lending criteria processes or reject a loan application. Once processed the bank further request credit score and collateral evaluation from Credit and Evaluation Bureaus respectively.
+After examining the Credit score and collateral banks can submit their quote against the applicants request, which is sent for broker's approval.
 
 # Usage
 
-## Running tests inside IntelliJ
-	
-We recommend editing your IntelliJ preferences so that you use the Gradle runner - this means that the quasar utils
-plugin will make sure that some flags (like ``-javaagent`` - see below) are
-set for you.
+## Running the CorDapp
 
-To switch to using the Gradle runner:
+Open a terminal and go to the project root directory and type: (to deploy the nodes using bootstrapper)
 
-* Navigate to ``Build, Execution, Deployment -> Build Tools -> Gradle -> Runner`` (or search for `runner`)
-  * Windows: this is in "Settings"
-  * MacOS: this is in "Preferences"
-* Set "Delegate IDE build/run actions to gradle" to true
-* Set "Run test using:" to "Gradle Test Runner"
+```
+./gradlew clean deployNodes
+```
 
-If you would prefer to use the built in IntelliJ JUnit test runner, you can run ``gradlew installQuasar`` which will
-copy your quasar JAR file to the lib directory. You will then need to specify ``-javaagent:lib/quasar.jar``
-and set the run directory to the project root directory for each test.
+Then type: (to run the nodes)
 
-## Running the nodes
+```
+./build/nodes/runnodes
+```
 
-See https://docs.corda.net/tutorial-cordapp.html#running-the-example-cordapp.
+## Interacting with the CorDapp
 
-## Interacting with the nodes
+The Broker starts the `RequestLoanFlow` in order to request loan from a group of
+lenders(retail banks).
 
-### Shell
+Go to Rrokers's terminal and run the below command.
+Add the path of collateral doc(optional)
 
-When started via the command line, each node will display an interactive shell:
+```
+flow start RequestLoanFlow lenders: [BankA, BankB], panNumber: “abc123”, loanAmount: 100000, filePath: “D:\\Corda\\samples-java\\Features\\attachment-sendfile\\test.zip”
+```
 
-    Welcome to the Corda interactive shell.
-    Useful commands include 'help' to see what is available, and 'bye' to shut down the node.
-    
-    Tue Nov 06 11:58:13 GMT 2018>>>
+Validate the Loan request is created and shared with the lenders successfully by running the vaultQuery command in each
+lender's terminal and borrower's terminal.
 
-You can use this shell to interact with your node. For example, enter `run networkMapSnapshot` to see a list of 
-the other nodes on the network:
+```
+run vaultQuery contractStateType: com.loanapp.states.LoanRequestState
+```
 
-    Tue Nov 06 11:58:13 GMT 2018>>> run networkMapSnapshot
-    [
-      {
-      "addresses" : [ "localhost:10002" ],
-      "legalIdentitiesAndCerts" : [ "O=Notary, L=London, C=GB" ],
-      "platformVersion" : 3,
-      "serial" : 1541505484825
-    },
-      {
-      "addresses" : [ "localhost:10005" ],
-      "legalIdentitiesAndCerts" : [ "O=PartyA, L=London, C=GB" ],
-      "platformVersion" : 3,
-      "serial" : 1541505382560
-    },
-      {
-      "addresses" : [ "localhost:10008" ],
-      "legalIdentitiesAndCerts" : [ "O=PartyB, L=New York, C=US" ],
-      "platformVersion" : 3,
-      "serial" : 1541505384742
-    }
-    ]
-    
-    Tue Nov 06 12:30:11 GMT 2018>>> 
+-----------to do-------------------
+Once the lenders have verified the project details and done their due deligence, they could submit bids for loan.
 
-You can find out more about the node shell [here](https://docs.corda.net/shell.html).
+Goto BankOfAshu's terminal and run the below command. The project-id can be found using the vaultQuery command shown earlier.
 
-### Client
+```
+start SubmitLoanBidFlow borrower: PeterCo, loanAmount: 8000000, tenure: 5, rateofInterest: 4.0, transactionFees: 20000, projectIdentifier: <project_id>
+```
 
-`clients/src/main/java/com/template/Client.java` defines a simple command-line client that connects to a node via RPC 
-and prints a list of the other nodes on the network.
+Validate the loanBid is submitted successfully by running the vaultQuery command below:
 
-#### Running the client
+```
+run vaultQuery contractStateType: net.corda.samples.lending.states.LoanBidState
+```
 
-##### Via the command line
+Now the borrower can inspect the loan terms and approve the loan bid, to start the syndication process.
 
-Run the `runTemplateClient` Gradle task. By default, it connects to the node with RPC address `localhost:10006` with 
-the username `user1` and the password `test`.
+Go to PeterCo's terminal and run the below command. The loanbid-identifier can be found using the vaultQuery command used earlier.
 
-##### Via IntelliJ
+```
+start ApproveLoanBidFlow bidIdentifier: <loanbid-identifier>
+```
 
-Run the `Run Template Client` run configuration. By default, it connects to the node with RPC address `localhost:10006` 
-with the username `user1` and the password `test`.
+One the loan bid has been approved by the borrower, the lender can start the process of creating the syndicate by
+acting as the lead bank and approach participating bank for funds.
 
-### Webserver
+Goto BankOfAshu's terminal and run the below command.
 
-`clients/src/main/java/com/template/webserver/` defines a simple Spring webserver that connects to a node via RPC and 
-allows you to interact with the node over HTTP.
+```
+start CreateSyndicateFlow participantBanks: [BankOfSneha, BankOfTom], projectIdentifier: <project-identifier>, loanDetailIdentifier: <loanbid-identifier>
+```
 
-The API endpoints are defined here:
+Verify the syndicate is created using the below command:
 
-     clients/src/main/java/com/template/webserver/Controller.java
+```
+run vaultQuery contractStateType: net.corda.samples.lending.states.SyndicateState
+```
 
-And a static webpage is defined here:
+On receiving the syndicate creation request, participating banks could verify the project and loan terms and submit
+bids for the amount of fund they wish to lend by using the below flow in BankOfSneha or BankOfTom node.
 
-     clients/src/main/resources/static/
+```
+start SyndicateBidFlow$Initiator syndicateIdentifier: <syndicate-id>, bidAmount: <lending-amount>
+```
 
-#### Running the webserver
+Verify the syndicate bid is successfully created using the below command:
 
-##### Via the command line
+```
+run vaultQuery contractStateType: net.corda.samples.lending.states.SyndicateBidState
+```
 
-Run the `runTemplateServer` Gradle task. By default, it connects to the node with RPC address `localhost:10006` with 
-the username `user1` and the password `test`, and serves the webserver on port `localhost:10050`.
+The lead bank on receiving bids from participating banks could approve the bid using the below flow command.
 
-##### Via IntelliJ
-
-Run the `Run Template Server` run configuration. By default, it connects to the node with RPC address `localhost:10006` 
-with the username `user1` and the password `test`, and serves the webserver on port `localhost:10050`.
-
-#### Interacting with the webserver
-
-The static webpage is served on:
-
-    http://localhost:10050
-
-While the sole template endpoint is served on:
-
-    http://localhost:10050/templateendpoint
-    
-# Extending the template
-
-You should extend this template as follows:
-
-* Add your own state and contract definitions under `contracts/src/main/java/`
-* Add your own flow definitions under `workflows/src/main/java/`
-* Extend or replace the client and webserver under `clients/src/main/java/`
-
-For a guided example of how to extend this template, see the Hello, World! tutorial 
-[here](https://docs.corda.net/hello-world-introduction.html).
+```
+start ApproveSyndicateBidFlow bidIdentifier: <sydicatebid-id>
+```

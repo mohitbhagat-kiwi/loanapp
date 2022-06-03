@@ -26,6 +26,8 @@ public class LoanRequestContract implements Contract {
                     require.using("The Loan Amount must be non-negative.", out.getLoanAmount() > 0);
                     require.using("There should be at least 1 lender", out.getLenders().stream().count() > 0);
                     require.using("The Loan Amount must be non-negative.", out.getPanNumber().length() == 6);
+                    require.using(String.valueOf(out.getBorrower().getName().getOrganisationUnit().equals("Fintech")), out.getBorrower()
+                            .getName().getOrganisationUnit().equals("Fintech"));
                 }
                 return null;
             });

@@ -20,10 +20,10 @@ public class RequestCreditScoreFlow {
         @Override
         @Suspendable
         public Void call() throws FlowException {
-            final Party crediBureau = getServiceHub().getNetworkMapCache().getPeerByLegalName(new CordaX500Name("CrediBureau", "Toronto", "CA"));
+            final Party  creditBureau = getServiceHub().getNetworkMapCache().getPeerByLegalName(new CordaX500Name(null,"credit","CreditBureau", "Toronto", null,"CA"));
 
             // Send the state to the counterparty, and receive it back with their signature.
-            FlowSession otherPartySession = initiateFlow(crediBureau);
+            FlowSession otherPartySession = initiateFlow(creditBureau);
             otherPartySession.send(panNumber);
             return  null;
         }

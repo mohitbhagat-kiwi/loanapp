@@ -45,7 +45,7 @@ public class RequestEvaluationFlow {
                 throw new IllegalArgumentException("Attachment Not Found");
 
             final Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
-            final Party evaluationBureau = getServiceHub().getNetworkMapCache().getPeerByLegalName(new CordaX500Name("evaluationBureau", "Toronto", "CA"));
+            final Party evaluationBureau = getServiceHub().getNetworkMapCache().getPeerByLegalName(new CordaX500Name(null,"eval","EvaluationBureau", "Toronto", null,"CA"));
             EvaluationRequestState output = new EvaluationRequestState(new UniqueIdentifier(),requestState.getAttachmentId(),
                     getOurIdentity(),evaluationBureau);
 
