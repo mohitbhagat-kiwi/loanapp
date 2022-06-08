@@ -1,11 +1,15 @@
 package com.loanapp.flows;
-
 import co.paralleluniverse.fibers.Suspendable;
 import com.loanapp.contracts.LoanRequestContract;
 import com.loanapp.states.LoanRequestState;
+import net.corda.core.contracts.StateAndRef;
+import com.r3.corda.lib.accounts.contracts.states.AccountInfo;
+import com.r3.corda.lib.accounts.workflows.flows.AccountInfoByName;
+import com.r3.corda.lib.accounts.workflows.flows.ShareAccountInfo;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.crypto.SecureHash;
 import net.corda.core.flows.*;
+import net.corda.core.identity.AnonymousParty;
 import net.corda.core.identity.Party;
 import net.corda.core.node.ServiceHub;
 import net.corda.core.serialization.ConstructorForDeserialization;
@@ -15,6 +19,7 @@ import net.corda.core.transactions.TransactionBuilder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.PublicKey;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,18 +28,20 @@ public class RequestLoanFlow {
     @StartableByRPC
     public static class Initiator extends FlowLogic<SignedTransaction> {
 
-        private Party borrower;
+        private String accountName;
+        private AnonymousParty borrower;
         private List<Party> lenders;
         private String panNumber;
         private int loanAmount;
         private String filePath;
 
-        public Initiator(List<Party> lenders, String panNumber, int loanAmount){
-            this(lenders,panNumber,loanAmount,"");
+        public Initiator(String accountName, List<Party> lenders, String panNumber, int loanAmount){
+            this(accountName,lenders,panNumber,loanAmount,"");
         }
 
         @ConstructorForDeserialization
-        public Initiator(List<Party> lenders, String panNumber, int loanAmount, String filePath) {
+        public Initiator(String accountName,List<Party> lenders, String panNumber, int loanAmount, String filePath) {
+            this.accountName = accountName;
             this.lenders = lenders;
             this.panNumber = panNumber;
             this.loanAmount = loanAmount;
@@ -52,7 +59,10 @@ public class RequestLoanFlow {
         @Override
         @Suspendable
         public SignedTransaction call() throws FlowException {
-            this.borrower = getOurIdentity();
+            AccountInfo borrowerAc = subFlow(new AccountInfoByName(accountName)).get(0).getState().getData();
+            PublicKey borrowerKey = getServiceHub().getKeyManagementService().freshKey(borrowerAc.getIdentifier().getId());
+            this.borrower = new AnonymousParty(borrowerKey);
+            //this.borrower = getOurIdentity();
             SecureHash attachmentHash = null;
             if(!filePath.isEmpty()){
                 try {
@@ -81,9 +91,10 @@ public class RequestLoanFlow {
                 builder.addAttachment(attachmentHash);
             }
 
+            //StateAndRef<AccountInfo> account = (StateAndRef<AccountInfo>) subFlow(new AccountInfoByName(acctName)).get(0);
 
             builder.verify(getServiceHub());
-            final SignedTransaction ptx = getServiceHub().signInitialTransaction(builder);
+            final SignedTransaction ptx = getServiceHub().signInitialTransaction(builder,borrower.getOwningKey()    );
 
             List<FlowSession> cpSesions = lenders.stream().map(this::initiateFlow).collect(Collectors.toList());
 

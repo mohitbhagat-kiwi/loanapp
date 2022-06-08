@@ -8,6 +8,7 @@ import net.corda.core.contracts.LinearPointer;
 import net.corda.core.contracts.LinearState;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.AbstractParty;
+import net.corda.core.identity.AnonymousParty;
 import net.corda.core.identity.Party;
 import net.corda.core.serialization.ConstructorForDeserialization;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +22,7 @@ public class LoanQuoteState implements LinearState {
     private LinearPointer<LoanRequestState> loanRequestDetails;
     private UniqueIdentifier uniqueIdentifier;
 
-    private Party borrower;
+    private AnonymousParty borrower;
     private Party lender;
     private int loanAmount;
     private int tenure;
@@ -30,7 +31,7 @@ public class LoanQuoteState implements LinearState {
     private String status;
 
     private LoanQuoteState(LinearPointer<LoanRequestState> loanRequestDetails,
-                          UniqueIdentifier uniqueIdentifier, Party borrower, Party lender,String status){
+                          UniqueIdentifier uniqueIdentifier, AnonymousParty borrower, Party lender,String status){
         this.loanRequestDetails = loanRequestDetails;
         this.uniqueIdentifier = uniqueIdentifier;
         this.lender = lender;
@@ -40,13 +41,13 @@ public class LoanQuoteState implements LinearState {
 
     @JvmStatic
     public static LoanQuoteState Issue(LinearPointer<LoanRequestState> loanRequestDetails,
-                                UniqueIdentifier uniqueIdentifier, Party borrower, Party lender,String status){
+                                UniqueIdentifier uniqueIdentifier, AnonymousParty borrower, Party lender,String status){
         return new LoanQuoteState(loanRequestDetails,uniqueIdentifier, borrower, lender,status);
     }
 
     @ConstructorForDeserialization
     public LoanQuoteState(LinearPointer<LoanRequestState> loanRequestDetails,
-                            UniqueIdentifier uniqueIdentifier, Party borrower, Party lender,
+                            UniqueIdentifier uniqueIdentifier, AnonymousParty borrower, Party lender,
                           int loanAmount, int tenure, double rateofInterest, int transactionFees,
                           String status){
         this.loanRequestDetails = loanRequestDetails;
@@ -60,7 +61,7 @@ public class LoanQuoteState implements LinearState {
         this.status = status;
     }
 
-    public Party getBorrower() { return borrower; }
+    public AnonymousParty getBorrower() { return borrower; }
     public Party getLender() { return lender; }
     public int getLoanAmount() {
         return loanAmount;

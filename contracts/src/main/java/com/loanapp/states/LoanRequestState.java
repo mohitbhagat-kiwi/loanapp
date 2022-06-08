@@ -5,6 +5,7 @@ import net.corda.core.contracts.BelongsToContract;
 import net.corda.core.contracts.LinearState;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.identity.AbstractParty;
+import net.corda.core.identity.AnonymousParty;
 import net.corda.core.identity.Party;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,14 +16,14 @@ import java.util.List;
 public class LoanRequestState implements LinearState {
 
 
-    private Party borrower;
+    private AnonymousParty borrower;
     private List<Party> lenders;
     private String panNumber;
     private int loanAmount;
     private String attachmentId;
     private UniqueIdentifier uniqueIdentifier;
 
-    public LoanRequestState(UniqueIdentifier uniqueIdentifier, String panNumber, Party borrower,
+    public LoanRequestState(UniqueIdentifier uniqueIdentifier, String panNumber, AnonymousParty borrower,
                          int loanAmount, List<Party> lenders,String attachmentId) {
         this.uniqueIdentifier = uniqueIdentifier;
         this.panNumber = panNumber;
@@ -50,7 +51,7 @@ public class LoanRequestState implements LinearState {
         return panNumber;
     }
 
-    public Party getBorrower() {
+    public AnonymousParty getBorrower() {
         return borrower;
     }
 

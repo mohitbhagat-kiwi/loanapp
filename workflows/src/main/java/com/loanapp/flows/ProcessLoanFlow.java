@@ -9,6 +9,7 @@ import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.StaticPointer;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.flows.*;
+import net.corda.core.identity.AnonymousParty;
 import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
@@ -20,7 +21,7 @@ public class ProcessLoanFlow {
     @InitiatingFlow
     @StartableByRPC
     public static class Initiator extends FlowLogic<SignedTransaction> {
-        private Party borrower;
+        private AnonymousParty borrower;
         private Party lender;
 
         private String status;
