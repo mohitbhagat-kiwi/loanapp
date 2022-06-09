@@ -4,15 +4,27 @@ import co.paralleluniverse.fibers.Suspendable;
 import com.loanapp.contracts.LoanQuoteContract;
 import com.loanapp.states.LoanQuoteState;
 import com.loanapp.states.LoanRequestState;
+import com.r3.corda.lib.accounts.contracts.states.AccountInfo;
+import com.r3.corda.lib.accounts.workflows.UtilitiesKt;
+import com.r3.corda.lib.accounts.workflows.flows.AccountInfoByKey;
+import com.r3.corda.lib.accounts.workflows.flows.RequestKeyForAccount;
+import com.r3.corda.lib.ci.workflows.ProvideKeyFlow;
+import com.r3.corda.lib.ci.workflows.RequestFreshKey;
+import com.r3.corda.lib.ci.workflows.RequestKey;
+import com.r3.corda.lib.ci.workflows.RequestKeyFlow;
 import net.corda.core.contracts.LinearPointer;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.contracts.StaticPointer;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.flows.*;
+import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.AnonymousParty;
+import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,12 +32,14 @@ import java.util.List;
 public class ProcessLoanFlow {
     @InitiatingFlow
     @StartableByRPC
+    @StartableByService
     public static class Initiator extends FlowLogic<SignedTransaction> {
         private AnonymousParty borrower;
         private Party lender;
 
         private String status;
         private UniqueIdentifier loanRequestIdentifier;
+        private final static Logger log = LoggerFactory.getLogger(Initiator.class);
 
         public Initiator(UniqueIdentifier loanRequestIdentifier,String status) {
             this.loanRequestIdentifier = loanRequestIdentifier;
@@ -55,6 +69,10 @@ public class ProcessLoanFlow {
 
             // Step 3. Create a new TransactionBuilder object.
             final TransactionBuilder builder = new TransactionBuilder(notary);
+            final Party  broker = getServiceHub().getNetworkMapCache().getPeerByLegalName(new CordaX500Name(null,"Fintech","Broker", "London", null,"GB"));
+            FlowSession cpSession = initiateFlow(broker);
+            //AnonymousParty ab = subFlow(new RequestKeyFlow(cpSession));
+
 
             // Step 4. Add the project as an output state, as well as a command to the transaction builder.
             builder.addOutputState(output);
@@ -64,7 +82,11 @@ public class ProcessLoanFlow {
             builder.verify(getServiceHub());
             final SignedTransaction ptx = getServiceHub().signInitialTransaction(builder);
 
-            FlowSession cpSession = initiateFlow(borrower);
+
+
+//            AccountInfo borrowerAc = UtilitiesKt.getAccountService(this).accountInfo(borrower.getOwningKey())
+//                    .getState().getData();
+//            log.info("borrowerAc " + borrowerAc);
             //step 6: collect signatures
             SignedTransaction stx = subFlow(new CollectSignaturesFlow(ptx, Arrays.asList(cpSession)));
 
@@ -87,6 +109,8 @@ public class ProcessLoanFlow {
         @Suspendable
         @Override
         public Void call() throws FlowException {
+
+            //subFlow(new ProvideKeyFlow(counterpartySession));
             SignedTransaction signedTransaction = subFlow(new SignTransactionFlow(counterpartySession) {
                 @Suspendable
                 @Override
