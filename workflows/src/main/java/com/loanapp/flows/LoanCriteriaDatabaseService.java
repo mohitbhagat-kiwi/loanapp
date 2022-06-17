@@ -12,35 +12,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.loanapp.flows.Constants.CREDIT_SCORE_TABLE_NAME;
+import static com.loanapp.flows.Constants.LOAN_CRITERIA_TABLE_NAME;
 
 @CordaService
-public class CreditScoreDatabaseService extends DatabaseService {
-    public CreditScoreDatabaseService(@NotNull ServiceHub services) throws SQLException {
+public class LoanCriteriaDatabaseService extends DatabaseService {
+    public LoanCriteriaDatabaseService(@NotNull ServiceHub services) throws SQLException {
         super(services);
         this.setUpStorage();
     }
 
     /**
-     * Adds a panNumber and associated value to the table of PanNumberValue values.
+     * Adds a criteria and associated value to the table of loanCriteria_values.
      */
-    protected void addPanNumberValue(String panNumber, double value) throws SQLException {
-        final String query = "insert into " + CREDIT_SCORE_TABLE_NAME + " values (?, ?)";
+    protected void addLoanCiteriaValue(String criteria, double value) throws SQLException {
+        final String query = "insert into " + LOAN_CRITERIA_TABLE_NAME + " values (?, ?)";
         final Map<Integer, Object> params = new HashMap<>();
-        params.put(1, panNumber);
+        params.put(1, criteria);
         params.put(2, value);
 
         executeUpdate(query, params);
-        log.info("panNumber " + panNumber + " added to PanNumberValue_values table.");
+        log.info("criteria " + criteria + " added to loanCriteria_values table.");
     }
 
     /**
-     * Retrieves the value of a panNumber in the table of panNumber values.
+     * Retrieves the value of a criteria in the table of loanCriteria_values.
      */
-    protected double queryPanNumberValue(String panNumber) throws SQLException {
-        final String query = "select value from " + CREDIT_SCORE_TABLE_NAME + " where panNumber = ?";
+    protected double queryLaonCriteriaValue(String criteria) throws SQLException {
+        final String query = "select value from " + LOAN_CRITERIA_TABLE_NAME + " where criteria = ?";
         final Map<Integer, Object> params = new HashMap<>();
-        params.put(1, panNumber);
+        params.put(1, criteria);
 
         Function<ResultSet, Object> transformer = (it) -> {
             double i = 0;
@@ -55,19 +55,19 @@ public class CreditScoreDatabaseService extends DatabaseService {
         final List<Object> results = executeQuery(query, params, transformer);
 
         if (results.isEmpty()) {
-            throw new IllegalArgumentException("panNumber " + panNumber + " not present in database");
+            throw new IllegalArgumentException("criteria " + criteria + " not present in database");
         } else if (results.size() > 1) {
             throw new IllegalArgumentException("Error list has more than one element");
         }
 
-        log.info("panNumber " + panNumber + "read from panNumber_values table.");
+        log.info("criteria " + criteria + "read from loanCriteria_values table.");
         return (Double) results.get(0);
     }
 
     private void setUpStorage() throws SQLException {
-        final String query = "create table if not exists " + CREDIT_SCORE_TABLE_NAME +
-                "(panNumber varchar(64), value int)";
+        final String query = "create table if not exists " + LOAN_CRITERIA_TABLE_NAME +
+                "(criteria varchar(64), value DOUBLE PRECISION)";
         executeUpdate(query, Collections.emptyMap());
-        log.info("Created panNumber_values table.");
+        log.info("Created loanCriteria_values table.");
     }
 }

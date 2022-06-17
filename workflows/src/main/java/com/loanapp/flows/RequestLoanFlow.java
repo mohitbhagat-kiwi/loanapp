@@ -92,7 +92,7 @@ public class RequestLoanFlow {
             final Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
 
             final LoanRequestState output = new LoanRequestState(new UniqueIdentifier(),panNumber,
-                    borrower,loanAmount,lenders,filePath.isEmpty()?"":attachmentHash.toString());
+                    borrower,loanAmount,lenders,filePath.isEmpty()?"":attachmentHash.toString(),borrowerInfo.getLinearId());
 
             final TransactionBuilder builder = new TransactionBuilder(notary);
 
@@ -102,36 +102,14 @@ public class RequestLoanFlow {
                 builder.addAttachment(attachmentHash);
             }
 
-            //StateAndRef<AccountInfo> account = (StateAndRef<AccountInfo>) subFlow(new AccountInfoByName(acctName)).get(0);
-
             builder.verify(getServiceHub());
             final SignedTransaction ptx = getServiceHub().signInitialTransaction(builder,borrower.getOwningKey()    );
 
-            //List<FlowSession> cpSesions = lenders.stream().map(this::initiateFlow).collect(Collectors.toList());
-            //subFlow(new ShareAccountInfo(borrowerAc, lenders));
-            Party lender1 = lenders.get(0);
-            FlowSession cpSesions = initiateFlow(lender1);
+            List<FlowSession> cpSesions = lenders.stream().map(this::initiateFlow).collect(Collectors.toList());
 
-            List<AbstractParty> accounts = new ArrayList<>();
-            accounts.add(borrower);
-            cpSesions.send(accountName);
-            subFlow(new ShareAccountInfoFlow( borrowerState, Arrays.asList( cpSesions)));
-            subFlow(new SyncKeyMappingFlow(cpSesions,accounts));
-            subFlow(new SyncKeyMappingFlowHandler(cpSesions));
+            subFlow(new ShareAccountInfoFlow( borrowerState, cpSesions));
 
-//            lenders.forEach(party -> {
-//                FlowSession session = initiateFlow(party);
-//                try {
-//                    session.send(accountName);
-//                    ShareKey(session,accounts);
-//                } catch (FlowException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            });
-
-
-
-            return subFlow(new FinalityFlow(ptx, Arrays.asList(cpSesions)));
+            return subFlow(new FinalityFlow(ptx, cpSesions));
         }
     }
 
@@ -150,19 +128,7 @@ public class RequestLoanFlow {
         @Suspendable
         @Override
         public Void call() throws FlowException {
-            String accountName = counterpartySession.receive(String.class).unwrap(t->t);
             subFlow(new ShareAccountInfoHandlerFlow(counterpartySession));
-            StateAndRef<AccountInfo> borrowerState = UtilitiesKt.getAccountService(this).accountInfo(accountName).get(0);
-            AccountInfo borrowerInfo = borrowerState.getState().getData();
-
-
-            subFlow(new SyncKeyMappingFlowHandler(counterpartySession));
-
-            AnonymousParty borrower = subFlow(new RequestKeyForAccount(borrowerInfo));
-
-            List<AbstractParty> accounts = new ArrayList<>();
-            accounts.add(borrower);
-            subFlow(new SyncKeyMappingFlow(counterpartySession, accounts));
 
             //Stored the transaction into data base.
             subFlow(new ReceiveFinalityFlow(counterpartySession));

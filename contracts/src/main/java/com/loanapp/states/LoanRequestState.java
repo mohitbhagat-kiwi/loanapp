@@ -17,6 +17,8 @@ public class LoanRequestState implements LinearState {
 
 
     private AnonymousParty borrower;
+
+    private UniqueIdentifier accountId;
     private List<Party> lenders;
     private String panNumber;
     private int loanAmount;
@@ -24,13 +26,14 @@ public class LoanRequestState implements LinearState {
     private UniqueIdentifier uniqueIdentifier;
 
     public LoanRequestState(UniqueIdentifier uniqueIdentifier, String panNumber, AnonymousParty borrower,
-                         int loanAmount, List<Party> lenders,String attachmentId) {
+                         int loanAmount, List<Party> lenders,String attachmentId, UniqueIdentifier accountId) {
         this.uniqueIdentifier = uniqueIdentifier;
         this.panNumber = panNumber;
         this.borrower = borrower;
         this.loanAmount = loanAmount;
         this.lenders = lenders;
         this.attachmentId = attachmentId;
+        this.accountId = accountId;
     }
     @NotNull
     @Override
@@ -64,4 +67,7 @@ public class LoanRequestState implements LinearState {
     }
 
     public String getAttachmentId() { return attachmentId; }
+
+
+    public UniqueIdentifier getAccountId() { return accountId; }
 }

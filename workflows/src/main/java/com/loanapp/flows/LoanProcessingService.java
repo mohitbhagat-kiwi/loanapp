@@ -10,6 +10,7 @@ import net.corda.core.serialization.SingletonSerializeAsToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -27,19 +28,25 @@ public class LoanProcessingService  extends SingletonSerializeAsToken {
 
     private void processLoan() {
         Party ourIdentity = ourIdentity();
+
         serviceHub.getVaultService().trackBy(LoanRequestState.class).getUpdates().subscribe(
                 update -> {
                     update.getProduced().forEach(
                             message -> {
+
                                 TransactionState<LoanRequestState> state = message.getState();
-//                                if (ourIdentity.getName().getOrganisationUnit().equals("Bank")
-//                                ) {
-//                                    executor.execute(() -> {
-//                                        log.info("Directing to message " + state);
-//                                        serviceHub.startFlow(new ProcessLoanFlow.Initiator(
-//                                                state.getData().getLinearId(),"InProcess")); // START FLOW HERE
-//                                    });
-//                                }
+                                if (ourIdentity.getName().getOrganisationUnit().equals("Bank")
+                                ) {
+                                    executor.execute(() -> {
+                                        try {
+                                            serviceHub.startFlow(new ProcessLoanFlow.Initiator(
+                                                    state.getData().getLinearId()));
+                                        }
+                                        catch (Exception e) {
+                                            log.error("flow error " + e.getMessage());
+                                        }
+                                    });
+                                }
                             }
                     );
                 }
