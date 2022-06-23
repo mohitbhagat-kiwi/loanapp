@@ -17,28 +17,59 @@ import java.time.Duration;
 @Configuration
 public class AppConfig implements WebMvcConfigurer {
 
-    @Value("${config.rpc.host}")
-    private String host;
-    // The RPC port of the node we are connecting to.
-    @Value("${config.rpc.username}")
-    private String username;
-    // The username for logging into the RPC client.
-    @Value("${config.rpc.password}")
-    private String password;
-    // The password for logging into the RPC client.
-    @Value("${config.rpc.port}")
-    private int rpcPort;
+    @Value("${broker.host}")
+    private String brokerHostAndPort;
+
+    @Value("${bankA.host}")
+    private String bankAHostAndPort;
+
+    @Value("${bankB.host}")
+    private String bankBHostAndPort;
+
+    @Value("${creditBureau.host}")
+    private String creditBureauHostAndPort;
+
+    @Value("${evaluationBureau.host}")
+    private String evaluationBureauHostAndPort;
 
     @Bean(destroyMethod = "")  // Avoids node shutdown on rpc disconnect
-    public CordaRPCOps defProxy(){
-        NetworkHostAndPort rpcAddress = new NetworkHostAndPort(host, rpcPort);
-        CordaRPCClient partyAClient = new CordaRPCClient(rpcAddress,new CordaRPCClientConfiguration(Duration.ofMinutes(3),10));
-        return partyAClient.start("user1", "test").getProxy();
+    public CordaRPCOps brokerProxy(){
+        CordaRPCClient brokerClient = new CordaRPCClient(NetworkHostAndPort.parse(brokerHostAndPort),
+                new CordaRPCClientConfiguration(Duration.ofMinutes(3),10));
+        return brokerClient.start("user1", "test").getProxy();
+    }
+
+    @Bean(destroyMethod = "")
+    public CordaRPCOps bankAProxy(){
+        CordaRPCClient bankAClient = new CordaRPCClient(NetworkHostAndPort.parse(bankAHostAndPort),
+                new CordaRPCClientConfiguration(Duration.ofMinutes(3),10));
+        return bankAClient.start("user1", "test").getProxy();
+    }
+
+    @Bean(destroyMethod = "")
+    public CordaRPCOps bankBProxy(){
+        CordaRPCClient bankBClient = new CordaRPCClient(NetworkHostAndPort.parse(bankBHostAndPort),
+                new CordaRPCClientConfiguration(Duration.ofMinutes(3),10));
+        return bankBClient.start("user1", "test").getProxy();
+    }
+
+    @Bean(destroyMethod = "")
+    public CordaRPCOps creditBureauProxy(){
+        CordaRPCClient bankBClient = new CordaRPCClient(NetworkHostAndPort.parse(creditBureauHostAndPort),
+                new CordaRPCClientConfiguration(Duration.ofMinutes(3),10));
+        return bankBClient.start("user1", "test").getProxy();
+    }
+
+    @Bean(destroyMethod = "")
+    public CordaRPCOps evaluationBureauProxy(){
+        CordaRPCClient bankBClient = new CordaRPCClient(NetworkHostAndPort.parse(evaluationBureauHostAndPort),
+                new CordaRPCClientConfiguration(Duration.ofMinutes(3),10));
+        return bankBClient.start("user1", "test").getProxy();
     }
 
     @Bean
     public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter(){
-        ObjectMapper mapper =  JacksonSupport.createDefaultMapper(defProxy());
+        ObjectMapper mapper =  JacksonSupport.createDefaultMapper(brokerProxy());
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setObjectMapper(mapper);
         return converter;

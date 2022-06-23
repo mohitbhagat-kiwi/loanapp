@@ -29,20 +29,20 @@ import java.util.concurrent.ExecutionException;
 public class Controller {
 //    @Autowired
 //    private CordaRPCOps notaryProxy;
-//    @Autowired
-//    private CordaRPCOps brokerProxy;
-//    @Autowired
-//    private CordaRPCOps bankAProxy;
-//    @Autowired
-//    private CordaRPCOps bankBProxy;
-//    @Autowired
-//    private CordaRPCOps creditBureauProxy;
-//    @Autowired
-//    private CordaRPCOps evaluationBureauProxy;
-//    @Autowired
-//    @Qualifier("notaryProxy")
-//    private CordaRPCOps activeParty;
-    private final CordaRPCOps proxy;
+    @Autowired
+    private CordaRPCOps brokerProxy;
+    @Autowired
+    private CordaRPCOps bankAProxy;
+    @Autowired
+    private CordaRPCOps bankBProxy;
+    @Autowired
+    private CordaRPCOps creditBureauProxy;
+    @Autowired
+    private CordaRPCOps evaluationBureauProxy;
+    @Autowired
+    @Qualifier("brokerProxy")
+    private CordaRPCOps activeParty;
+    //private final CordaRPCOps proxy;
     private final static Logger logger = LoggerFactory.getLogger(Controller.class);
     private final Map<String, Class<? extends ContractState>> map= getStateMapData();
 
@@ -57,9 +57,9 @@ public class Controller {
         //return (Class<? extends ContractState>) map.get(stateName).class;
     }
 
-    public Controller(NodeRPCConnection rpc) {
-        this.proxy = rpc.proxy;
-    }
+//    public Controller(NodeRPCConnection rpc) {
+//        this.proxy = rpc.proxy;
+//    }
 
     @GetMapping(value = "/templateendpoint", produces = "text/plain")
     private String templateendpoint() {
@@ -69,7 +69,7 @@ public class Controller {
     @GetMapping("loanRequests")
     public APIResponse<List<StateAndRef<LoanRequestState>>> getLoanRequestsList() {
         try{
-            List<StateAndRef<LoanRequestState>> auctionList = proxy.vaultQuery(LoanRequestState.class).getStates();
+            List<StateAndRef<LoanRequestState>> auctionList = activeParty.vaultQuery(LoanRequestState.class).getStates();
             return APIResponse.success(auctionList);
         }catch(Exception e){
             return APIResponse.error(e.getMessage());
@@ -79,7 +79,7 @@ public class Controller {
     @GetMapping("loanRequest123")
     public APIResponse<List<StateAndRef<LoanRequestState>>> getVaultStateList(String stateName) {
         try{
-            List<StateAndRef<LoanRequestState>> auctionList = proxy.vaultQuery(LoanRequestState.class).getStates();
+            List<StateAndRef<LoanRequestState>> auctionList = activeParty.vaultQuery(LoanRequestState.class).getStates();
             return APIResponse.success(auctionList);
         }catch(Exception e){
             return APIResponse.error(e.getMessage());
@@ -88,28 +88,28 @@ public class Controller {
 
     @PostMapping(value = "switch-party/{party}")
     public APIResponse<Void> switchParty(@PathVariable String party){
-//        switch (party){
+        switch (party){
 //            case "notary" :
 //                activeParty = notaryProxy;
 //                break;
-//            case "broker" :
-//                activeParty = brokerProxy;
-//                break;
-//            case "bankA" :
-//                activeParty = bankAProxy;
-//                break;
-//            case "bankB" :
-//                activeParty = bankBProxy;
-//                break;
-//            case "creditBureau" :
-//                activeParty = creditBureauProxy;
-//                break;
-//            case "evaluationBureau" :
-//                activeParty = evaluationBureauProxy;
-//                break;
-//            default:
-//                return APIResponse.error("Unrecognised Party");
-//        }
+            case "broker" :
+                activeParty = brokerProxy;
+                break;
+            case "bankA" :
+                activeParty = bankAProxy;
+                break;
+            case "bankB" :
+                activeParty = bankBProxy;
+                break;
+            case "creditBureau" :
+                activeParty = creditBureauProxy;
+                break;
+            case "evaluationBureau" :
+                activeParty = evaluationBureauProxy;
+                break;
+            default:
+                return APIResponse.error("Unrecognised Party");
+        }
 
         return APIResponse.success();
     }
@@ -128,9 +128,9 @@ public class Controller {
         try{
             List<Party> lenders = new ArrayList<>();
             loanRequest.getLenders().stream().forEach( name ->
-                    lenders.add(proxy.partiesFromName(name, false).iterator().next())
+                    lenders.add(activeParty.partiesFromName(name, false).iterator().next())
             );
-            proxy.startFlowDynamic(RequestLoanFlow.Initiator.class,
+            activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
                             lenders,loanRequest.getPanNumber(),loanRequest.getLoanAmount())
                     .getReturnValue().get();
 

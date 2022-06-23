@@ -37,8 +37,7 @@ springBoot {
  */
 task runTemplateClient(type: JavaExec, dependsOn: assemble) {
     classpath = sourceSets.main.runtimeClasspath
-    main = 'com.loanapp.Client'
-    args 'localhost:10006', 'user1', 'test'
+    main = 'com.loanapp.webserver.Starter'
 }
 
 /* This task will start the springboot server that connects to your node (via RPC connection). All of the http requests
@@ -47,5 +46,5 @@ task runTemplateClient(type: JavaExec, dependsOn: assemble) {
 task runTemplateServer(type: JavaExec, dependsOn: assemble) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'com.loanapp.webserver.Starter'
-    args '--server.port=8085', '--config.rpc.host=localhost', '--config.rpc.port=10006', '--config.rpc.username=user1', '--config.rpc.password=test'
+    args '--server.port=8085', '--config.rpc.host=localhost', '--config.rpc.port=10005', '--config.rpc.username=user1', '--config.rpc.password=test'
 }
