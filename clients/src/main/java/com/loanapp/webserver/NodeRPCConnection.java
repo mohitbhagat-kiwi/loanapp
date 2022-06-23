@@ -1,6 +1,7 @@
 package com.loanapp.webserver;
 
 import net.corda.client.rpc.CordaRPCClient;
+import net.corda.client.rpc.CordaRPCClientConfiguration;
 import net.corda.client.rpc.CordaRPCConnection;
 import net.corda.core.messaging.CordaRPCOps;
 import net.corda.core.utilities.NetworkHostAndPort;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.time.Duration;
 
 /**
  * Wraps an RPC connection to a Corda node.
@@ -36,7 +38,7 @@ public class NodeRPCConnection implements AutoCloseable {
     @PostConstruct
     public void initialiseNodeRPCConnection() {
         NetworkHostAndPort rpcAddress = new NetworkHostAndPort(host, rpcPort);
-        CordaRPCClient rpcClient = new CordaRPCClient(rpcAddress);
+        CordaRPCClient rpcClient = new CordaRPCClient(rpcAddress,new CordaRPCClientConfiguration(Duration.ofMinutes(3),10));
         rpcConnection = rpcClient.start(username, password);
         proxy = rpcConnection.getProxy();
     }
