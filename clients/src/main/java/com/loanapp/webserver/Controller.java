@@ -1,18 +1,25 @@
 package com.loanapp.webserver;
 
+import com.loanapp.flows.RequestLoanFlow;
 import com.loanapp.states.LoanRequestState;
+import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
+import net.corda.core.contracts.TransactionVerificationException;
+import net.corda.core.identity.Party;
 import net.corda.core.messaging.CordaRPCOps;
+import net.corda.core.utilities.OpaqueBytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Define your API endpoints here.
@@ -112,6 +119,30 @@ public class Controller {
         try{
             return APIResponse.success("auctionList");
         }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("requestLoan")
+    public APIResponse<Void> issueCash(@RequestBody Forms.LoanRequestForm loanRequest){
+        try{
+            List<Party> lenders = new ArrayList<>();
+            loanRequest.getLenders().stream().forEach( name ->
+                    lenders.add(proxy.partiesFromName(name, false).iterator().next())
+            );
+            proxy.startFlowDynamic(RequestLoanFlow.Initiator.class,
+                            lenders,loanRequest.getPanNumber(),loanRequest.getLoanAmount())
+                    .getReturnValue().get();
+
+            return APIResponse.success();
+        }catch (ExecutionException e){
+            if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
+                return APIResponse.error(e.getCause().getMessage());
+            }else{
+                return APIResponse.error(e.getMessage());
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage());
             return APIResponse.error(e.getMessage());
         }
     }
