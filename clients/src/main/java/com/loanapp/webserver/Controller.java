@@ -24,7 +24,9 @@ import java.util.concurrent.ExecutionException;
 /**
  * Define your API endpoints here.
  */
+
 @RestController
+@CrossOrigin
 @RequestMapping("/") // The paths for HTTP requests are relative to this base path.
 public class Controller {
 //    @Autowired
