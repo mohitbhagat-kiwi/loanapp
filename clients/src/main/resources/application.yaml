@@ -1,16 +1,21 @@
 broker:
   host: 54.185.125.76:10005
+#  host: localhost:10005
 
 bankA:
   host: 52.40.54.193:10003
+#  host: localhost:10006
 
 bankB:
   host: 52.40.54.193:10005
+#  host: localhost:10009
 
 creditBureau:
   host: 35.164.55.78:10003
+#  host: localhost:10009
 
 evaluationBureau:
   host: 35.164.55.78:10005
+#  host: localhost:10009
 
 server.port: 8085
