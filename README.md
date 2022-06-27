@@ -27,7 +27,7 @@ Then type: (to run the nodes)
 The Broker starts the `RequestLoanFlow` in order to request loan from a group of
 lenders(retail banks).
 
-Go to Rrokers's terminal and run the below command.
+Go to Brokers's terminal and run the below command.
 Add the path of collateral doc(optional)
 
 ```
@@ -47,7 +47,7 @@ Once the lenders have verified the project details and done their due deligence,
 Goto BankOfAshu's terminal and run the below command. The project-id can be found using the vaultQuery command shown earlier.
 
 ```
-start SubmitLoanBidFlow borrower: PeterCo, loanAmount: 8000000, tenure: 5, rateofInterest: 4.0, transactionFees: 20000, projectIdentifier: <project_id>
+flow start SubmitLoanBidFlow borrower: PeterCo, loanAmount: 8000000, tenure: 5, rateofInterest: 4.0, transactionFees: 20000, projectIdentifier: <project_id>
 ```
 
 Validate the loanBid is submitted successfully by running the vaultQuery command below:
