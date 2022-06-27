@@ -1,6 +1,6 @@
 package com.loanapp.webserver;
 
-import com.loanapp.flows.RequestLoanFlow;
+import com.loanapp.flows.*;
 import com.loanapp.states.*;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.ContractState;
@@ -166,7 +166,7 @@ public class Controller {
     }
 
     @PostMapping("requestLoan")
-    public APIResponse<Void> issueCash(@RequestBody Forms.LoanRequestForm loanRequest){
+    public APIResponse<Void> requestLoan(@RequestBody Forms.LoanRequestForm loanRequest){
         try{
             List<Party> lenders = new ArrayList<>();
             loanRequest.getLenders().stream().forEach( name ->
@@ -174,6 +174,126 @@ public class Controller {
             );
             activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
                             lenders,loanRequest.getPanNumber(),loanRequest.getLoanAmount())
+                    .getReturnValue().get();
+
+            return APIResponse.success();
+        }catch (ExecutionException e){
+            if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
+                return APIResponse.error(e.getCause().getMessage());
+            }else{
+                return APIResponse.error(e.getMessage());
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("addPanNumber")
+    public APIResponse<Void> addPanNumber(@RequestBody Forms.AddPanNumberForm addPannumberRequest){
+        try{
+            activeParty.startFlowDynamic(AddPannumberFlow.class,
+                            addPannumberRequest.getPanNumber(),addPannumberRequest.getCreditValue())
+                    .getReturnValue().get();
+
+            return APIResponse.success();
+        }catch (ExecutionException e){
+            if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
+                return APIResponse.error(e.getCause().getMessage());
+            }else{
+                return APIResponse.error(e.getMessage());
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("requestCreditScore")
+    public APIResponse<Void> requestCreditScore(@RequestBody Forms.RequestCreditScoreForm creditScoreRequest){
+        try{
+            activeParty.startFlowDynamic(RequestCreditScoreFlow.Initiator.class,
+                            creditScoreRequest.getPanNumber())
+                    .getReturnValue().get();
+
+            return APIResponse.success();
+        }catch (ExecutionException e){
+            if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
+                return APIResponse.error(e.getCause().getMessage());
+            }else{
+                return APIResponse.error(e.getMessage());
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("requestEvaluation")
+    public APIResponse<Void> requestEvaluation(@RequestBody Forms.RequestEvaluationForm requestEvaluationRequest){
+        try{
+            activeParty.startFlowDynamic(RequestEvaluationFlow.Initiator.class,
+                            requestEvaluationRequest.getLoanRequestIdentifier())
+                    .getReturnValue().get();
+
+            return APIResponse.success();
+        }catch (ExecutionException e){
+            if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
+                return APIResponse.error(e.getCause().getMessage());
+            }else{
+                return APIResponse.error(e.getMessage());
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("issueEvaluation")
+    public APIResponse<Void> issueEvaluation(@RequestBody Forms.IssueEvaluationForm issueEvaluationRequest){
+        try{
+            activeParty.startFlowDynamic(IssueEvaluationFlow.Initiator.class,
+                            issueEvaluationRequest.getEvaluationRequestID(), issueEvaluationRequest.getEvaluationPrice())
+                    .getReturnValue().get();
+
+            return APIResponse.success();
+        }catch (ExecutionException e){
+            if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
+                return APIResponse.error(e.getCause().getMessage());
+            }else{
+                return APIResponse.error(e.getMessage());
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("submitLoanQuote")
+    public APIResponse<Void> submitLoanQuote(@RequestBody Forms.SubmitLoanQuoteForm submitLoanQuoteRequest){
+        try{
+            activeParty.startFlowDynamic(SubmitLoanQuoteFlow.Initiator.class,
+                            submitLoanQuoteRequest.getQuoteIdentifier(), submitLoanQuoteRequest.getLoanAmount(), submitLoanQuoteRequest.getTenure(), submitLoanQuoteRequest.getRateofInterest(), submitLoanQuoteRequest.getTransactionFees())
+                    .getReturnValue().get();
+
+            return APIResponse.success();
+        }catch (ExecutionException e){
+            if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
+                return APIResponse.error(e.getCause().getMessage());
+            }else{
+                return APIResponse.error(e.getMessage());
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("approveLoanQuote")
+    public APIResponse<Void> approveLoanQuote(@RequestBody Forms.ApproveLoanQuoteForm approveLoanQuoteRequest){
+        try{
+            activeParty.startFlowDynamic(ApproveLoanQuoteFlow.Initiator.class,
+                            approveLoanQuoteRequest.getQuoteId())
                     .getReturnValue().get();
 
             return APIResponse.success();
