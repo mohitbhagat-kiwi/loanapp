@@ -166,7 +166,7 @@ public class Controller {
     }
 
     @PostMapping("requestLoan")
-    public APIResponse<Void> issueCash(@RequestBody Forms.LoanRequestForm loanRequest){
+    public APIResponse<Void> requestLoan(@RequestBody Forms.LoanRequestForm loanRequest){
         try{
             List<Party> lenders = new ArrayList<>();
             loanRequest.getLenders().stream().forEach( name ->
