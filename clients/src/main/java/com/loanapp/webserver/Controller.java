@@ -1,7 +1,7 @@
 package com.loanapp.webserver;
 
 import com.loanapp.flows.RequestLoanFlow;
-import com.loanapp.states.LoanRequestState;
+import com.loanapp.states.*;
 import net.corda.core.contracts.Amount;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.StateAndRef;
@@ -71,8 +71,48 @@ public class Controller {
     @GetMapping("loanRequests")
     public APIResponse<List<StateAndRef<LoanRequestState>>> getLoanRequestsList() {
         try{
-            List<StateAndRef<LoanRequestState>> auctionList = activeParty.vaultQuery(LoanRequestState.class).getStates();
-            return APIResponse.success(auctionList);
+            List<StateAndRef<LoanRequestState>> statesList = activeParty.vaultQuery(LoanRequestState.class).getStates();
+            return APIResponse.success(statesList);
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("loanQuotes")
+    public APIResponse<List<StateAndRef<LoanQuoteState>>> getLoanQuotesList() {
+        try{
+            List<StateAndRef<LoanQuoteState>> statesList = activeParty.vaultQuery(LoanQuoteState.class).getStates();
+            return APIResponse.success(statesList);
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("evaluationStates")
+    public APIResponse<List<StateAndRef<EvaluationState>>> getEvaluationStatesList() {
+        try{
+            List<StateAndRef<EvaluationState>> statesList = activeParty.vaultQuery(EvaluationState.class).getStates();
+            return APIResponse.success(statesList);
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("evaluationRequestStates")
+    public APIResponse<List<StateAndRef<EvaluationRequestState>>> getEvaluationRequestStatesList() {
+        try{
+            List<StateAndRef<EvaluationRequestState>> statesList = activeParty.vaultQuery(EvaluationRequestState.class).getStates();
+            return APIResponse.success(statesList);
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("creditScoreStates")
+    public APIResponse<List<StateAndRef<CreditScoreState>>> getCreditScoreStatesList() {
+        try{
+            List<StateAndRef<CreditScoreState>> stateList = activeParty.vaultQuery(CreditScoreState.class).getStates();
+            return APIResponse.success(stateList);
         }catch(Exception e){
             return APIResponse.error(e.getMessage());
         }
