@@ -30,6 +30,21 @@ public class Forms {
         }
     }
 
+    public static class LoanProcessForm {
+        private String loanRequestIdentifier;
+        private String status;
+        public String getLoanRequestIdentifier() {
+            return loanRequestIdentifier;
+        }
+        public String getStatus() { return status; }
+        public void setLoanRequestIdentifier(String loanRequestIdentifier) {
+            this.loanRequestIdentifier = loanRequestIdentifier;
+        }
+        public void setStatus(String status) {
+            this.status = status;
+        }
+    }
+
     public static class AddPanNumberForm {
         private String panNumber;
         private int creditValue;
