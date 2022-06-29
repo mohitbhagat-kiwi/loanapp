@@ -42,7 +42,7 @@ public class IssueCreditScoreFlow {
 
             final Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
 
-            final CreditScoreState output = new CreditScoreState(new UniqueIdentifier(), requestingBank,getOurIdentity(), creditScore);
+            final CreditScoreState output = new CreditScoreState(new UniqueIdentifier(), requestingBank,getOurIdentity(), creditScore,panNumber);
 
             final TransactionBuilder builder = new TransactionBuilder(notary);
 

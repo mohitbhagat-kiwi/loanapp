@@ -17,17 +17,20 @@ public class CreditScoreState implements LinearState {
     private Party requestingBank;
     private Party issuer;
     private Double creditScore;
+    private String panNumber;
 
-    public CreditScoreState(UniqueIdentifier uniqueIdentifier, Party requestingBank,Party issuer, Double creditScore) {
+    public CreditScoreState(UniqueIdentifier uniqueIdentifier, Party requestingBank,Party issuer, Double creditScore,String panNumber) {
         this.uniqueIdentifier = uniqueIdentifier;
         this.requestingBank = requestingBank;
         this.issuer = issuer;
         this.creditScore = creditScore;
+        this.panNumber = panNumber;
     }
 
     public Double getCreditScore() {
         return creditScore;
     }
+    public String getPanNumber() { return panNumber; }
 
     @NotNull
     @Override
