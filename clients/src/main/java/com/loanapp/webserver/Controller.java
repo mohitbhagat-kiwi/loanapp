@@ -249,8 +249,9 @@ public class Controller {
     @PostMapping("requestEvaluation")
     public APIResponse<Void> requestEvaluation(@RequestBody Forms.RequestEvaluationForm requestEvaluationRequest){
         try{
+            UUID uuid = UUID.fromString(requestEvaluationRequest.getLoanRequestIdentifier());
             activeParty.startFlowDynamic(RequestEvaluationFlow.Initiator.class,
-                            requestEvaluationRequest.getLoanRequestIdentifier())
+                            new UniqueIdentifier(null,uuid))
                     .getReturnValue().get();
 
             return APIResponse.success();
@@ -269,8 +270,9 @@ public class Controller {
     @PostMapping("issueEvaluation")
     public APIResponse<Void> issueEvaluation(@RequestBody Forms.IssueEvaluationForm issueEvaluationRequest){
         try{
+            UUID uuid = UUID.fromString(issueEvaluationRequest.getEvaluationRequestID());
             activeParty.startFlowDynamic(IssueEvaluationFlow.Initiator.class,
-                            issueEvaluationRequest.getEvaluationRequestID(), issueEvaluationRequest.getEvaluationPrice())
+                            new UniqueIdentifier(null,uuid), issueEvaluationRequest.getEvaluationPrice())
                     .getReturnValue().get();
 
             return APIResponse.success();
@@ -289,8 +291,9 @@ public class Controller {
     @PostMapping("submitLoanQuote")
     public APIResponse<Void> submitLoanQuote(@RequestBody Forms.SubmitLoanQuoteForm submitLoanQuoteRequest){
         try{
+            UUID uuid = UUID.fromString(submitLoanQuoteRequest.getQuoteIdentifier());
             activeParty.startFlowDynamic(SubmitLoanQuoteFlow.Initiator.class,
-                            submitLoanQuoteRequest.getQuoteIdentifier(), submitLoanQuoteRequest.getLoanAmount(), submitLoanQuoteRequest.getTenure(), submitLoanQuoteRequest.getRateofInterest(), submitLoanQuoteRequest.getTransactionFees())
+                            new UniqueIdentifier(null,uuid), submitLoanQuoteRequest.getLoanAmount(), submitLoanQuoteRequest.getTenure(), submitLoanQuoteRequest.getRateofInterest(), submitLoanQuoteRequest.getTransactionFees())
                     .getReturnValue().get();
 
             return APIResponse.success();
@@ -309,8 +312,9 @@ public class Controller {
     @PostMapping("approveLoanQuote")
     public APIResponse<Void> approveLoanQuote(@RequestBody Forms.ApproveLoanQuoteForm approveLoanQuoteRequest){
         try{
+            UUID uuid = UUID.fromString(approveLoanQuoteRequest.getQuoteId());
             activeParty.startFlowDynamic(ApproveLoanQuoteFlow.Initiator.class,
-                            approveLoanQuoteRequest.getQuoteId())
+                            new UniqueIdentifier(null,uuid))
                     .getReturnValue().get();
 
             return APIResponse.success();
