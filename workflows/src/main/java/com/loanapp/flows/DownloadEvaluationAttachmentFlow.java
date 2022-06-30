@@ -11,6 +11,7 @@ import net.corda.core.flows.FlowLogic;
 import net.corda.core.flows.InitiatingFlow;
 import net.corda.core.flows.StartableByRPC;
 import net.corda.core.node.services.vault.QueryCriteria;
+import net.corda.core.serialization.ConstructorForDeserialization;
 import net.corda.core.transactions.SignedTransaction;
 
 import java.io.File;
@@ -27,6 +28,11 @@ public class DownloadEvaluationAttachmentFlow {
         private final UniqueIdentifier evaluationRequestID;
         private final String path;
 
+        public Initiator(UniqueIdentifier evaluationRequestID){
+            this(evaluationRequestID,"");
+        }
+
+        @ConstructorForDeserialization
         public Initiator(UniqueIdentifier evaluationRequestID, String path) {
             this.evaluationRequestID = evaluationRequestID;
             this.path = path;
@@ -45,6 +51,9 @@ public class DownloadEvaluationAttachmentFlow {
             }).findAny().orElseThrow(() -> new IllegalArgumentException("Request Not Found"));
             String attachmentID = inputStateAndRef.getState().getData().getAttachmentID();
             Attachment content = getServiceHub().getAttachments().openAttachment(SecureHash.parse(attachmentID));
+            if(path.isEmpty()){
+                return attachmentID;
+            }
             try {
                 assert content != null;
                 //content.extractFile(path, new FileOutputStream(new File(path)));

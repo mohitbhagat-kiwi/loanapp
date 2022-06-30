@@ -148,4 +148,13 @@ public class Forms {
             this.quoteId = loanRequestIdentifier;
         }
     }
+    public static class DownloadAttachmentForm {
+        private String evaluationRequestID;
+        public String getEvaluationRequestID() {
+            return evaluationRequestID;
+        }
+        public void setEvaluationRequestID(String panNumber) {
+            this.evaluationRequestID = panNumber;
+        }
+    }
 }

@@ -28,17 +28,25 @@ public class RequestLoanFlow {
         private String panNumber;
         private int loanAmount;
         private String filePath;
+        private SecureHash attachmentHash;
 
         public Initiator(List<Party> lenders, String panNumber, int loanAmount){
-            this(lenders,panNumber,loanAmount,"");
+            this(lenders,panNumber,loanAmount,"",null);
+        }
+        public Initiator(List<Party> lenders, String panNumber, int loanAmount, SecureHash attachmentHash){
+            this(lenders,panNumber,loanAmount,"",attachmentHash);
+        }
+        public Initiator(List<Party> lenders, String panNumber, int loanAmount, String filePath){
+            this(lenders,panNumber,loanAmount,filePath,null);
         }
 
         @ConstructorForDeserialization
-        public Initiator(List<Party> lenders, String panNumber, int loanAmount, String filePath) {
+        public Initiator(List<Party> lenders, String panNumber, int loanAmount, String filePath,SecureHash attachmentHash) {
             this.lenders = lenders;
             this.panNumber = panNumber;
             this.loanAmount = loanAmount;
             this.filePath = filePath;
+            this.attachmentHash = attachmentHash;
         }
         private static String uploadAttachment(String path, ServiceHub service, Party whoami, String filename) throws IOException {
             SecureHash attachmentHash = service.getAttachments().importAttachment(
@@ -53,7 +61,7 @@ public class RequestLoanFlow {
         @Suspendable
         public SignedTransaction call() throws FlowException {
             this.borrower = getOurIdentity();
-            SecureHash attachmentHash = null;
+            //SecureHash attachmentHash = null;
             if(!filePath.isEmpty()){
                 try {
                     attachmentHash = SecureHash.parse(uploadAttachment(
@@ -71,7 +79,7 @@ public class RequestLoanFlow {
             final Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
 
             final LoanRequestState output = new LoanRequestState(new UniqueIdentifier(),panNumber,
-                    borrower,loanAmount,lenders,filePath.isEmpty()?"":attachmentHash.toString());
+                    borrower,loanAmount,lenders,attachmentHash == null?"":attachmentHash.toString());
 
             final TransactionBuilder builder = new TransactionBuilder(notary);
 

@@ -3,6 +3,7 @@ package com.loanapp.webserver;
 import com.loanapp.flows.*;
 import com.loanapp.states.*;
 import net.corda.core.contracts.*;
+import net.corda.core.crypto.SecureHash;
 import net.corda.core.identity.Party;
 import net.corda.core.messaging.CordaRPCOps;
 import net.corda.core.utilities.OpaqueBytes;
@@ -10,8 +11,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -183,6 +194,38 @@ public class Controller {
         }
     }
 
+    @RequestMapping(path = "requestLoanFile", method = RequestMethod.POST,
+            consumes = {"multipart/form-data"})
+    public APIResponse<Void> requestLoanFile(@RequestPart List<String> lenders, @RequestPart String panNumber,
+                                             @RequestPart int loanAmount,@RequestPart MultipartFile file){
+        try{
+            List<Party> lenderList = new ArrayList<>();
+            lenders.stream().forEach( name ->
+                    lenderList.add(activeParty.partiesFromName(name, false).iterator().next())
+            );
+            SecureHash attachmentHash = null;
+            if(file != null){
+                String filename = file.getOriginalFilename();
+                String nodeOrg = activeParty.nodeInfo().getLegalIdentities().get(0).getName().getOrganisation();
+                attachmentHash=activeParty.uploadAttachmentWithMetadata(
+                        file.getInputStream(),nodeOrg,filename);
+            }
+            activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
+                            lenderList,panNumber,loanAmount, "",attachmentHash)
+                    .getReturnValue().get();
+
+            return APIResponse.success();
+        }catch (ExecutionException e){
+            if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
+                return APIResponse.error(e.getCause().getMessage());
+            }else{
+                return APIResponse.error(e.getMessage());
+            }
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return APIResponse.error(e.getMessage());
+        }
+    }
     @PostMapping("processLoan")
     public APIResponse<Void> processLoan(@RequestBody Forms.LoanProcessForm processLoanRequest){
         try{
@@ -329,4 +372,38 @@ public class Controller {
             return APIResponse.error(e.getMessage());
         }
     }
+
+    @PostMapping("upload")
+    public ResponseEntity<String> upload(@RequestParam MultipartFile file) throws IOException {
+//        MultipartFile multipartFile = new MockMultipartFile("file",
+//                file.getName(), "text/plain", IOUtils.toByteArray(input));
+        String filename = file.getOriginalFilename();
+//        InputStream ip = new FileInputStream(file);
+        String nodeOrg = activeParty.nodeInfo().getLegalIdentities().get(0).getName().getOrganisation();
+        SecureHash hash=activeParty.uploadAttachmentWithMetadata(
+                    file.getInputStream(),
+                nodeOrg,"test");
+        return ResponseEntity.created(URI.create("attachments/$hash")).body("Attachment uploaded with hash - "+hash);
+    }
+
+    @PostMapping("download-attachment")
+    public ResponseEntity<Resource> download(@RequestParam String evaluationRequestID){
+        UUID uuid = UUID.fromString(evaluationRequestID);
+        try {
+            String attachmentId = activeParty.startFlowDynamic(DownloadEvaluationAttachmentFlow.Initiator.class,
+                    new UniqueIdentifier(null,uuid)).getReturnValue().get();
+            InputStreamResource ip = new InputStreamResource(activeParty.openAttachment(SecureHash.parse(attachmentId)));
+            return ResponseEntity.ok().header(
+                    HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"attachment.zip\""
+            ).body(ip);
+
+        }catch (Exception e){
+            return (ResponseEntity<Resource>) ResponseEntity.notFound();
+        }
+
+    }
+
+
+
 }
