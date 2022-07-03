@@ -177,9 +177,18 @@ public class Controller {
             loanRequest.getLenders().stream().forEach( name ->
                     lenders.add(activeParty.partiesFromName(name, false).iterator().next())
             );
-            activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
-                            lenders,loanRequest.getPanNumber(),loanRequest.getLoanAmount())
-                    .getReturnValue().get();
+            if(loanRequest.getAttachmentId()!= "" && loanRequest.getAttachmentId() != null){
+                activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
+                                lenders,loanRequest.getPanNumber(),loanRequest.getLoanAmount()
+                                ,"",SecureHash.parse(loanRequest.getAttachmentId()))
+                        .getReturnValue().get();
+            }else {
+
+                activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
+                                lenders,loanRequest.getPanNumber(),loanRequest.getLoanAmount())
+                        .getReturnValue().get();
+            }
+
 
             return APIResponse.success();
         }catch (ExecutionException e){
@@ -207,8 +216,8 @@ public class Controller {
             if(file != null){
                 String filename = file.getOriginalFilename();
                 String nodeOrg = activeParty.nodeInfo().getLegalIdentities().get(0).getName().getOrganisation();
-                attachmentHash=activeParty.uploadAttachmentWithMetadata(
-                        file.getInputStream(),nodeOrg,filename);
+                attachmentHash=activeParty.uploadAttachment(
+                        file.getInputStream());
             }
             activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
                             lenderList,panNumber,loanAmount, "",attachmentHash)
@@ -380,10 +389,9 @@ public class Controller {
         String filename = file.getOriginalFilename();
 //        InputStream ip = new FileInputStream(file);
         String nodeOrg = activeParty.nodeInfo().getLegalIdentities().get(0).getName().getOrganisation();
-        SecureHash hash=activeParty.uploadAttachmentWithMetadata(
-                    file.getInputStream(),
-                nodeOrg,"test");
-        return ResponseEntity.created(URI.create("attachments/$hash")).body("Attachment uploaded with hash - "+hash);
+        SecureHash hash=activeParty.uploadAttachment(
+                    file.getInputStream());
+            return ResponseEntity.created(URI.create("attachments/$hash")).body("Attachment uploaded with hash - "+hash.toString());
     }
 
     @PostMapping("download-attachment")
@@ -404,6 +412,41 @@ public class Controller {
 
     }
 
+    @PostMapping("login")
+    public APIResponse<Void> approveLoanQuote(@RequestBody Forms.LoginForm request){
+        if(request.getUsername() == "kiwitech" && request.getPassword() == "admin@123"){
+            return APIResponse.success();
+        }
+        else return APIResponse.error("Invalid Credentials");
+    }
+
+    @GetMapping("loanQuotesData")
+    public APIResponse<Quotesdata> getLoanQuotesData() {
+        try{
+            List<StateAndRef<LoanQuoteState>> quotesList = activeParty.vaultQuery(LoanQuoteState.class).getStates();
+            List<StateAndRef<LoanRequestState>> statesList = activeParty.vaultQuery(LoanRequestState.class).getStates();
+//            quotesList.stream().forEach(quote -> statesList.stream().filter(req ->
+//                    req.getState().getData().getLinearId()
+//                            .equals(quote.getState().getData().getLoanRequestDetails()
+//                                    .resolve(activeParty))));
+            //List<GetQuoteDataFlow.Quotesdata> result = activeParty.startFlowDynamic(GetQuoteDataFlow.Initiator.class,statesList).getReturnValue().get();
+
+
+            return APIResponse.success(new Quotesdata(statesList,quotesList));
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    public class Quotesdata{
+        public List<StateAndRef<LoanRequestState>> requests;
+        public List<StateAndRef<LoanQuoteState>> quotes;
+
+        public Quotesdata(List<StateAndRef<LoanRequestState>> requests, List<StateAndRef<LoanQuoteState>> quotes) {
+            this.requests = requests;
+            this.quotes = quotes;
+        }
+    }
 
 
 }

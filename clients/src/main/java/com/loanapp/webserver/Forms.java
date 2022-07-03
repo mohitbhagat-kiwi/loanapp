@@ -9,6 +9,8 @@ public class Forms {
         private String panNumber;
         private int loanAmount;
 
+        private String attachmentId;
+
         public List<String> getLenders() {
             return lenders;
         }
@@ -17,6 +19,9 @@ public class Forms {
         }
         public int getLoanAmount() {
             return loanAmount;
+        }
+        public String getAttachmentId() {
+            return attachmentId;
         }
 
         public void setLenders(List<String> lenders) {
@@ -27,6 +32,10 @@ public class Forms {
         }
         public void setLoanAmount(int loanAmount) {
             this.loanAmount = loanAmount;
+        }
+
+        public void setAttachmentId(String attachmentId) {
+            this.attachmentId = attachmentId;
         }
     }
 
@@ -156,5 +165,18 @@ public class Forms {
         public void setEvaluationRequestID(String panNumber) {
             this.evaluationRequestID = panNumber;
         }
+    }
+
+    public static class LoginForm{
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        private String username;
+        private String password;
     }
 }

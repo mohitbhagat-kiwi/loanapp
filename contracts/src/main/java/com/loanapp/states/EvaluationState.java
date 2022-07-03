@@ -13,13 +13,13 @@ import java.util.List;
 
 @BelongsToContract(EvaluationContract.class)
 public class EvaluationState implements LinearState {
-    private final UniqueIdentifier evaluationID;
+    private final UniqueIdentifier uniqueIdentifier;
     private final Party requestingBank;
     private final Party issuer;
     private final int evaluation;
 
-    public EvaluationState(UniqueIdentifier evaluationID, Party requestingBank, Party issuer, int evaluation) {
-        this.evaluationID = evaluationID;
+    public EvaluationState(UniqueIdentifier uniqueIdentifier, Party requestingBank, Party issuer, int evaluation) {
+        this.uniqueIdentifier = uniqueIdentifier;
         this.requestingBank = requestingBank;
         this.issuer = issuer;
         this.evaluation = evaluation;
@@ -34,12 +34,9 @@ public class EvaluationState implements LinearState {
     @NotNull
     @Override
     public UniqueIdentifier getLinearId() {
-        return evaluationID;
+        return uniqueIdentifier;
     }
 
-    public UniqueIdentifier getEvaluationID() {
-        return evaluationID;
-    }
 
     public Party getRequestingBank() {
         return requestingBank;
