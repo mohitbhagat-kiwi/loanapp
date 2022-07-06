@@ -82,10 +82,6 @@ public class CreditScoreDatabaseService extends DatabaseService {
 
         final List<Object> results = executeQuery(query, params, transformer);
 
-        if (results.isEmpty()) {
-            throw new IllegalArgumentException("not present in database");
-        }
-
         return results;
     }
 
