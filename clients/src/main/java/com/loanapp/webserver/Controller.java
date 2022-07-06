@@ -382,16 +382,27 @@ public class Controller {
         }
     }
 
-    @PostMapping("upload")
-    public ResponseEntity<String> upload(@RequestParam MultipartFile file) throws IOException {
-//        MultipartFile multipartFile = new MockMultipartFile("file",
-//                file.getName(), "text/plain", IOUtils.toByteArray(input));
-        String filename = file.getOriginalFilename();
-//        InputStream ip = new FileInputStream(file);
-        String nodeOrg = activeParty.nodeInfo().getLegalIdentities().get(0).getName().getOrganisation();
-        SecureHash hash=activeParty.uploadAttachment(
-                    file.getInputStream());
-            return ResponseEntity.created(URI.create("attachments/$hash")).body("Attachment uploaded with hash - "+hash.toString());
+    @RequestMapping(path = "upload/{lenders}/{panNumber}/{loanAmount}", method = RequestMethod.POST,
+            consumes = {"multipart/form-data"})
+    public ResponseEntity<String> upload(@RequestPart MultipartFile file, @PathVariable String lenders,
+                                         @PathVariable String panNumber,@PathVariable int loanAmount) throws IOException, ExecutionException, InterruptedException {
+
+            List<Party> lenderList = new ArrayList<>();
+            Arrays.asList(lenders.split(",")).stream().forEach( name ->
+                    lenderList.add(activeParty.partiesFromName(name, false).iterator().next())
+            );
+            SecureHash attachmentHash = null;
+            if(file != null){
+                String filename = file.getOriginalFilename();
+                String nodeOrg = activeParty.nodeInfo().getLegalIdentities().get(0).getName().getOrganisation();
+                attachmentHash=activeParty.uploadAttachment(
+                        file.getInputStream());
+            }
+            activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
+                            lenderList,panNumber,loanAmount, "",attachmentHash)
+                    .getReturnValue().get();
+
+            return ResponseEntity.created(URI.create("attachments/$hash")).body("Attachment uploaded with hash - ");
     }
 
     @PostMapping("download-attachment")
