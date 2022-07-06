@@ -64,6 +64,32 @@ public class CreditScoreDatabaseService extends DatabaseService {
         return (Double) results.get(0);
     }
 
+    protected List<Object> queryAllPanNumberValue() throws SQLException {
+        final String query = "select * from " + TABLE_NAME;
+        final Map<Integer, Object> params = new HashMap<>();
+        Function<ResultSet, Object> transformer = (it) -> {
+
+            double i = 0;
+            String p = "";
+            try {
+                i = it.getDouble("value");
+                p = it.getString("panNumber");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return p + ":" + i ;
+        };
+
+        final List<Object> results = executeQuery(query, params, transformer);
+
+        if (results.isEmpty()) {
+            throw new IllegalArgumentException("not present in database");
+        }
+
+        return results;
+    }
+
+
     private void setUpStorage() throws SQLException {
         final String query = "create table if not exists " + TABLE_NAME +
                 "(panNumber varchar(64), value int)";

@@ -133,6 +133,17 @@ public class Controller {
         }
     }
 
+    @GetMapping("getAllPanNumber")
+    public APIResponse<List<Object>> getAllPanNumber(){
+        try{
+            List<Object> res = activeParty.startFlowDynamic(GetAllPanNumberFlow.class)
+                    .getReturnValue().get();
+            return APIResponse.success(res);
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
     @PostMapping(value = "switch-party/{party}")
     public APIResponse<Void> switchParty(@PathVariable String party){
         switch (party){
@@ -391,6 +402,7 @@ public class Controller {
         String nodeOrg = activeParty.nodeInfo().getLegalIdentities().get(0).getName().getOrganisation();
         SecureHash hash=activeParty.uploadAttachment(
                     file.getInputStream());
+
             return ResponseEntity.created(URI.create("attachments/$hash")).body("Attachment uploaded with hash - "+hash.toString());
     }
 
