@@ -144,6 +144,131 @@ public class Controller {
         }
     }
 
+    @GetMapping("getBrokerDashBoard")
+    public APIResponse<LinkedHashMap<String, Integer>> getBrokerDashBoard() {
+        int totalLoanAmount = 0;
+        int inProcessStatus = 0;
+        int rejectedStatus = 0;
+        int submittedStatus = 0;
+        int approvedStatus = 0;
+        try{
+            List<StateAndRef<LoanRequestState>> loanRequestStateList = activeParty.vaultQuery(LoanRequestState.class).getStates();
+            for ( int i =0 ; i< loanRequestStateList.size() ; i++) {
+                totalLoanAmount += loanRequestStateList.get(i).getState().getData().getLoanAmount();
+            }
+
+            List<StateAndRef<LoanQuoteState>> loanQuoteStatesList = activeParty.vaultQuery(LoanQuoteState.class).getStates();
+            for ( int i =0 ; i< loanQuoteStatesList.size() ; i++) {
+                if ( loanQuoteStatesList.get(i).getState().getData().getStatus().equalsIgnoreCase("Submitted")) {
+                    submittedStatus++;
+                } else if ( loanQuoteStatesList.get(i).getState().getData().getStatus().equalsIgnoreCase("InProcess")) {
+                    inProcessStatus++;
+                }else if ( loanQuoteStatesList.get(i).getState().getData().getStatus().equalsIgnoreCase("Rejected")) {
+                    rejectedStatus++;
+                }else if ( loanQuoteStatesList.get(i).getState().getData().getStatus().equalsIgnoreCase("Approved")) {
+                    approvedStatus++;
+                }
+            }
+
+            LinkedHashMap<String, Integer> finalResult = new LinkedHashMap<>();
+            finalResult.put("totalLoanRequest",loanRequestStateList.size());
+            finalResult.put("totalLoanAmount",totalLoanAmount);
+            finalResult.put("totalQuoteReceived",loanQuoteStatesList.size());
+            finalResult.put("totalPendingApproval",submittedStatus);
+            finalResult.put("totalProcessApproval",inProcessStatus);
+            finalResult.put("totalRejectedApproval",rejectedStatus);
+            finalResult.put("totalApprovedApproval",approvedStatus);
+
+            return APIResponse.success(finalResult);
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("getBankDashBoard")
+    public APIResponse<LinkedHashMap<String, Integer>> getBankDashBoard() {
+        int totalLoanAmountQuoted = 0;
+        int inProcessStatus = 0;
+        int rejectedStatus = 0;
+        int submittedStatus = 0;
+        int approvedStatus = 0;
+        try{
+            List<StateAndRef<LoanRequestState>> loanRequestStateList = activeParty.vaultQuery(LoanRequestState.class).getStates();
+
+            List<StateAndRef<EvaluationRequestState>> evaluationRequestStatesList = activeParty.vaultQuery(EvaluationRequestState.class).getStates();
+
+            List<StateAndRef<EvaluationState>> evaluationStatesList = activeParty.vaultQuery(EvaluationState.class).getStates();
+
+            List<StateAndRef<CreditScoreState>> creditScoreStateList = activeParty.vaultQuery(CreditScoreState.class).getStates();
+
+            List<StateAndRef<LoanQuoteState>> loanQuoteStatesList = activeParty.vaultQuery(LoanQuoteState.class).getStates();
+
+            for ( int i =0 ; i< loanQuoteStatesList.size() ; i++) {
+                if ( loanQuoteStatesList.get(i).getState().getData().getStatus().equalsIgnoreCase("Submitted")) {
+                    submittedStatus++;
+                } else if ( loanQuoteStatesList.get(i).getState().getData().getStatus().equalsIgnoreCase("InProcess")) {
+                    inProcessStatus++;
+                }else if ( loanQuoteStatesList.get(i).getState().getData().getStatus().equalsIgnoreCase("Rejected")) {
+                    rejectedStatus++;
+                }else if ( loanQuoteStatesList.get(i).getState().getData().getStatus().equalsIgnoreCase("Approved")) {
+                    approvedStatus++;
+                }
+                totalLoanAmountQuoted += loanQuoteStatesList.get(i).getState().getData().getLoanAmount();
+            }
+            LinkedHashMap<String, Integer> finalResult = new LinkedHashMap<>();
+            finalResult.put("totalLoanRequest",loanRequestStateList.size());
+            finalResult.put("totalQuoteReceived",loanQuoteStatesList.size());
+            finalResult.put("totalSubmittedApproval",submittedStatus);
+            finalResult.put("totalProcessApproval",inProcessStatus);
+            finalResult.put("totalRejectedApproval",rejectedStatus);
+            finalResult.put("totalApprovedApproval",approvedStatus);
+            finalResult.put("totalEvaluationRequest",evaluationRequestStatesList.size());
+            finalResult.put("totalEvaluation",evaluationStatesList.size());
+            finalResult.put("totalCreditScore",creditScoreStateList.size());
+            finalResult.put("totalLoanAmountQuoted",totalLoanAmountQuoted);
+
+            return APIResponse.success(finalResult);
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("getCreditBureauDashBoard")
+    public APIResponse<LinkedHashMap<String, Integer>> getCreditBureauDashBoard() {
+
+        try{
+            List<Object> res = activeParty.startFlowDynamic(GetAllPanNumberFlow.class).getReturnValue().get();
+
+            List<StateAndRef<CreditScoreState>> creditScoreStateList = activeParty.vaultQuery(CreditScoreState.class).getStates();
+
+            LinkedHashMap<String, Integer> finalResult = new LinkedHashMap<>();
+            finalResult.put("totalPanCards",res.size());
+            finalResult.put("totalCreditScore",creditScoreStateList.size());
+
+            return APIResponse.success(finalResult);
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("getEvaluationBureauDashBoard")
+    public APIResponse<LinkedHashMap<String, Integer>> getEvaluationBureauDashBoard() {
+
+        try{
+            List<StateAndRef<EvaluationRequestState>> evaluationRequestStatesList = activeParty.vaultQuery(EvaluationRequestState.class).getStates();
+
+            List<StateAndRef<EvaluationState>> evaluationStatesList = activeParty.vaultQuery(EvaluationState.class).getStates();
+
+            LinkedHashMap<String, Integer> finalResult = new LinkedHashMap<>();
+            finalResult.put("totalEvaluationRequest",evaluationRequestStatesList.size());
+            finalResult.put("totalEvaluation",evaluationStatesList.size());
+
+            return APIResponse.success(finalResult);
+        }catch(Exception e){
+            return APIResponse.error(e.getMessage());
+        }
+    }
+
     @PostMapping(value = "switch-party/{party}")
     public APIResponse<Void> switchParty(@PathVariable String party){
         switch (party){
