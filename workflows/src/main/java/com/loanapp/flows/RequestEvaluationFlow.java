@@ -21,7 +21,7 @@ import java.util.List;
 public class RequestEvaluationFlow {
     @InitiatingFlow
     @StartableByRPC
-    public static class Initiator extends FlowLogic<SignedTransaction> {
+    public static class Initiator extends FlowLogic<String> {
 
         private UniqueIdentifier loanRequestIdentifier;
 
@@ -31,7 +31,7 @@ public class RequestEvaluationFlow {
 
         @Override
         @Suspendable
-        public SignedTransaction call() throws FlowException {
+        public String call() throws FlowException {
             List<StateAndRef<LoanRequestState>> loanRequestStateAndRefs = getServiceHub().getVaultService()
                     .queryBy(LoanRequestState.class).getStates();
 
@@ -62,7 +62,8 @@ public class RequestEvaluationFlow {
             FlowSession session = initiateFlow(evaluationBureau);
             SignedTransaction fullySignedTransaction = subFlow(new CollectSignaturesFlow(ptx, Arrays.asList(session)));
 
-            return  subFlow(new FinalityFlow(fullySignedTransaction, Arrays.asList(session)));
+            subFlow(new FinalityFlow(fullySignedTransaction, Arrays.asList(session)));
+            return output.getLinearId().toString();
         }
     }
     @InitiatedBy(Initiator.class)

@@ -307,26 +307,26 @@ public class Controller {
     }
 
     @PostMapping("requestLoan")
-    public APIResponse<Void> requestLoan(@RequestBody Forms.LoanRequestForm loanRequest){
+    public APIResponse<String> requestLoan(@RequestBody Forms.LoanRequestForm loanRequest){
         try{
             List<Party> lenders = new ArrayList<>();
+            String result = null;
             loanRequest.getLenders().stream().forEach( name ->
-                    lenders.add(activeParty.partiesFromName(name, false).iterator().next())
+                     lenders.add(activeParty.partiesFromName(name, false).iterator().next())
             );
             if(loanRequest.getAttachmentId()!= "" && loanRequest.getAttachmentId() != null){
-                activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
+                result =  activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
                                 lenders,loanRequest.getPanNumber(),loanRequest.getLoanAmount()
                                 ,"",SecureHash.parse(loanRequest.getAttachmentId()))
                         .getReturnValue().get();
             }else {
 
-                activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
+                result =  activeParty.startFlowDynamic(RequestLoanFlow.Initiator.class,
                                 lenders,loanRequest.getPanNumber(),loanRequest.getLoanAmount())
                         .getReturnValue().get();
             }
 
-
-            return APIResponse.success();
+            return APIResponse.success(result);
         }catch (ExecutionException e){
             if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
                 return APIResponse.error(e.getCause().getMessage());
@@ -372,16 +372,15 @@ public class Controller {
         }
     }
     @PostMapping("processLoan")
-    public APIResponse<Void> processLoan(@RequestBody Forms.LoanProcessForm processLoanRequest){
+    public APIResponse<String> processLoan(@RequestBody Forms.LoanProcessForm processLoanRequest){
         try{
+            String result = null;
             UUID uuid = UUID.fromString(processLoanRequest.getLoanRequestIdentifier());
-            activeParty.startFlowDynamic(ProcessLoanFlow.Initiator.class,
+            result = activeParty.startFlowDynamic(ProcessLoanFlow.Initiator.class,
                             new UniqueIdentifier(null,uuid),processLoanRequest.getStatus())
                     .getReturnValue().get();
 
-
-
-            return APIResponse.success();
+            return APIResponse.success(result);
         }catch (ExecutionException e){
             if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
                 return APIResponse.error(e.getCause().getMessage());
@@ -415,13 +414,14 @@ public class Controller {
     }
 
     @PostMapping("requestCreditScore")
-    public APIResponse<Void> requestCreditScore(@RequestBody Forms.RequestCreditScoreForm creditScoreRequest){
+    public APIResponse<String> requestCreditScore(@RequestBody Forms.RequestCreditScoreForm creditScoreRequest){
         try{
-            activeParty.startFlowDynamic(RequestCreditScoreFlow.Initiator.class,
+            String result = null;
+            result = activeParty.startFlowDynamic(RequestCreditScoreFlow.Initiator.class,
                             creditScoreRequest.getPanNumber())
                     .getReturnValue().get();
 
-            return APIResponse.success();
+            return APIResponse.success(result);
         }catch (ExecutionException e){
             if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
                 return APIResponse.error(e.getCause().getMessage());
@@ -435,14 +435,15 @@ public class Controller {
     }
 
     @PostMapping("requestEvaluation")
-    public APIResponse<Void> requestEvaluation(@RequestBody Forms.RequestEvaluationForm requestEvaluationRequest){
+    public APIResponse<String> requestEvaluation(@RequestBody Forms.RequestEvaluationForm requestEvaluationRequest){
         try{
+            String result = null;
             UUID uuid = UUID.fromString(requestEvaluationRequest.getLoanRequestIdentifier());
-            activeParty.startFlowDynamic(RequestEvaluationFlow.Initiator.class,
+            result = activeParty.startFlowDynamic(RequestEvaluationFlow.Initiator.class,
                             new UniqueIdentifier(null,uuid))
                     .getReturnValue().get();
 
-            return APIResponse.success();
+            return APIResponse.success(result);
         }catch (ExecutionException e){
             if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
                 return APIResponse.error(e.getCause().getMessage());
@@ -456,14 +457,15 @@ public class Controller {
     }
 
     @PostMapping("issueEvaluation")
-    public APIResponse<Void> issueEvaluation(@RequestBody Forms.IssueEvaluationForm issueEvaluationRequest){
+    public APIResponse<String> issueEvaluation(@RequestBody Forms.IssueEvaluationForm issueEvaluationRequest){
         try{
+            String result = null;
             UUID uuid = UUID.fromString(issueEvaluationRequest.getEvaluationRequestID());
-            activeParty.startFlowDynamic(IssueEvaluationFlow.Initiator.class,
+            result = activeParty.startFlowDynamic(IssueEvaluationFlow.Initiator.class,
                             new UniqueIdentifier(null,uuid), issueEvaluationRequest.getEvaluationPrice())
                     .getReturnValue().get();
 
-            return APIResponse.success();
+            return APIResponse.success(result);
         }catch (ExecutionException e){
             if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
                 return APIResponse.error(e.getCause().getMessage());
@@ -477,14 +479,15 @@ public class Controller {
     }
 
     @PostMapping("submitLoanQuote")
-    public APIResponse<Void> submitLoanQuote(@RequestBody Forms.SubmitLoanQuoteForm submitLoanQuoteRequest){
+    public APIResponse<String> submitLoanQuote(@RequestBody Forms.SubmitLoanQuoteForm submitLoanQuoteRequest){
         try{
+            String result = null;
             UUID uuid = UUID.fromString(submitLoanQuoteRequest.getQuoteIdentifier());
-            activeParty.startFlowDynamic(SubmitLoanQuoteFlow.Initiator.class,
+            result = activeParty.startFlowDynamic(SubmitLoanQuoteFlow.Initiator.class,
                             new UniqueIdentifier(null,uuid), submitLoanQuoteRequest.getLoanAmount(), submitLoanQuoteRequest.getTenure(), submitLoanQuoteRequest.getRateofInterest(), submitLoanQuoteRequest.getTransactionFees())
                     .getReturnValue().get();
 
-            return APIResponse.success();
+            return APIResponse.success(result);
         }catch (ExecutionException e){
             if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
                 return APIResponse.error(e.getCause().getMessage());
@@ -498,14 +501,15 @@ public class Controller {
     }
 
     @PostMapping("approveLoanQuote")
-    public APIResponse<Void> approveLoanQuote(@RequestBody Forms.ApproveLoanQuoteForm approveLoanQuoteRequest){
+    public APIResponse<String> approveLoanQuote(@RequestBody Forms.ApproveLoanQuoteForm approveLoanQuoteRequest){
         try{
+            String result = null;
             UUID uuid = UUID.fromString(approveLoanQuoteRequest.getQuoteId());
-            activeParty.startFlowDynamic(ApproveLoanQuoteFlow.Initiator.class,
+           result = activeParty.startFlowDynamic(ApproveLoanQuoteFlow.Initiator.class,
                             new UniqueIdentifier(null,uuid))
                     .getReturnValue().get();
 
-            return APIResponse.success();
+            return APIResponse.success(result);
         }catch (ExecutionException e){
             if(e.getCause() != null && e.getCause().getClass().equals(TransactionVerificationException.ContractRejection.class)){
                 return APIResponse.error(e.getCause().getMessage());

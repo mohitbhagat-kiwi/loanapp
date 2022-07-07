@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class RequestLoanFlow {
     @InitiatingFlow
     @StartableByRPC
-    public static class Initiator extends FlowLogic<SignedTransaction> {
+    public static class Initiator extends FlowLogic<String> {
 
         private Party borrower;
         private List<Party> lenders;
@@ -59,7 +59,7 @@ public class RequestLoanFlow {
         }
         @Override
         @Suspendable
-        public SignedTransaction call() throws FlowException {
+        public String call() throws FlowException {
             this.borrower = getOurIdentity();
             //SecureHash attachmentHash = null;
             if(!filePath.isEmpty()){
@@ -94,9 +94,8 @@ public class RequestLoanFlow {
             final SignedTransaction ptx = getServiceHub().signInitialTransaction(builder);
 
             List<FlowSession> cpSesions = lenders.stream().map(this::initiateFlow).collect(Collectors.toList());
-
-
-            return subFlow(new FinalityFlow(ptx, cpSesions));
+            subFlow(new FinalityFlow(ptx, cpSesions));
+            return output.getLinearId().toString();
         }
     }
 

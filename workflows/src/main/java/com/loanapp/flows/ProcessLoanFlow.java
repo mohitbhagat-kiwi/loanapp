@@ -19,7 +19,7 @@ import java.util.List;
 public class ProcessLoanFlow {
     @InitiatingFlow
     @StartableByRPC
-    public static class Initiator extends FlowLogic<SignedTransaction> {
+    public static class Initiator extends FlowLogic<String> {
         private Party borrower;
         private Party lender;
 
@@ -33,7 +33,7 @@ public class ProcessLoanFlow {
 
         @Override
         @Suspendable
-        public SignedTransaction call() throws FlowException {
+        public String call() throws FlowException {
 
             this.lender = getOurIdentity();
             List<StateAndRef<LoanRequestState>> loanRequestStateAndRefs = getServiceHub().getVaultService()
@@ -69,7 +69,8 @@ public class ProcessLoanFlow {
 
 
             // Step 7. Assuming no exceptions, we can now finalise the transaction
-            return subFlow(new FinalityFlow(stx, Arrays.asList(cpSession)));
+            subFlow(new FinalityFlow(stx, Arrays.asList(cpSession)));
+            return output.getLinearId().toString();
         }
     }
 

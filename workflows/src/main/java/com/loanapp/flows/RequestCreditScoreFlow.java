@@ -9,7 +9,7 @@ import net.corda.core.utilities.UntrustworthyData;
 public class RequestCreditScoreFlow {
     @InitiatingFlow
     @StartableByRPC
-    public static class Initiator extends FlowLogic<Void> {
+    public static class Initiator extends FlowLogic<String> {
 
         private String panNumber;
 
@@ -19,7 +19,7 @@ public class RequestCreditScoreFlow {
 
         @Override
         @Suspendable
-        public Void call() throws FlowException {
+        public String call() throws FlowException {
             final Party  creditBureau = getServiceHub().getNetworkMapCache().getPeerByLegalName(new CordaX500Name(null,"credit","CreditBureau", "Toronto", null,"CA"));
 
             // Send the state to the counterparty, and receive it back with their signature.
@@ -30,7 +30,7 @@ public class RequestCreditScoreFlow {
     }
 
     @InitiatedBy(Initiator.class)
-    public static class Responder extends FlowLogic<Void>{
+    public static class Responder extends FlowLogic<String>{
         //private variable
         private FlowSession counterpartySession;
 
@@ -41,7 +41,7 @@ public class RequestCreditScoreFlow {
 
         @Suspendable
         @Override
-        public Void call() throws FlowException {
+        public String call() throws FlowException {
             UntrustworthyData<String> counterpartyData = counterpartySession.receive(String.class);
 
             final String panNumber = counterpartyData.unwrap(msg -> {
@@ -50,8 +50,7 @@ public class RequestCreditScoreFlow {
             });
 
             //Stored the transaction into data base.
-            subFlow(new IssueCreditScoreFlow.Initiator(counterpartySession.getCounterparty(), panNumber));
-            return null;
+            return subFlow(new IssueCreditScoreFlow.Initiator(counterpartySession.getCounterparty(), panNumber));
         }
     }
 }
