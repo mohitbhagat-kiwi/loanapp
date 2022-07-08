@@ -17,7 +17,7 @@ public class IssueCreditScoreFlow {
 
     @InitiatingFlow
     @StartableByRPC
-    public static class Initiator extends FlowLogic<SignedTransaction> {
+    public static class Initiator extends FlowLogic<String> {
 
         private Party requestingBank;
         private String panNumber;
@@ -29,7 +29,7 @@ public class IssueCreditScoreFlow {
 
         @Override
         @Suspendable
-        public SignedTransaction call() throws FlowException {
+        public String call() throws FlowException {
 
             // Get creditscore from DB based on Pan Number
             final CreditScoreDatabaseService databaseService = getServiceHub().cordaService(CreditScoreDatabaseService.class);
@@ -59,7 +59,8 @@ public class IssueCreditScoreFlow {
                     new CollectSignaturesFlow(ptx, Arrays.asList(otherPartySession)));
 
             // Notarise and record the transaction in both parties' vaults.
-            return subFlow(new FinalityFlow(fullySignedTx, Arrays.asList(otherPartySession)));
+            subFlow(new FinalityFlow(fullySignedTx, Arrays.asList(otherPartySession)));
+            return output.getLinearId().toString();
         }
     }
 
