@@ -77,7 +77,11 @@ public class Controller {
     public APIResponse<List<StateAndRef<LoanRequestState>>> getLoanRequestsList() {
         try{
             List<StateAndRef<LoanRequestState>> statesList = activeParty.vaultQuery(LoanRequestState.class).getStates();
-            return APIResponse.success(statesList);
+            List<StateAndRef<LoanRequestState>> result =  new ArrayList<>();
+            for(int i=statesList.size()-1; i>=0;i--){
+                result.add(statesList.get(i));
+            }
+            return APIResponse.success(result);
         }catch(Exception e){
             return APIResponse.error(e.getMessage());
         }
@@ -87,7 +91,11 @@ public class Controller {
     public APIResponse<List<StateAndRef<LoanQuoteState>>> getLoanQuotesList() {
         try{
             List<StateAndRef<LoanQuoteState>> statesList = activeParty.vaultQuery(LoanQuoteState.class).getStates();
-            return APIResponse.success(statesList);
+            List<StateAndRef<LoanQuoteState>> result =  new ArrayList<>();
+            for(int i=statesList.size()-1; i>=0;i--){
+                result.add(statesList.get(i));
+            }
+            return APIResponse.success(result);
         }catch(Exception e){
             return APIResponse.error(e.getMessage());
         }
@@ -97,7 +105,11 @@ public class Controller {
     public APIResponse<List<StateAndRef<EvaluationState>>> getEvaluationStatesList() {
         try{
             List<StateAndRef<EvaluationState>> statesList = activeParty.vaultQuery(EvaluationState.class).getStates();
-            return APIResponse.success(statesList);
+            List<StateAndRef<EvaluationState>> result =  new ArrayList<>();
+            for(int i=statesList.size()-1; i>=0;i--){
+                result.add(statesList.get(i));
+            }
+            return APIResponse.success(result);
         }catch(Exception e){
             return APIResponse.error(e.getMessage());
         }
@@ -107,7 +119,11 @@ public class Controller {
     public APIResponse<List<StateAndRef<EvaluationRequestState>>> getEvaluationRequestStatesList() {
         try{
             List<StateAndRef<EvaluationRequestState>> statesList = activeParty.vaultQuery(EvaluationRequestState.class).getStates();
-            return APIResponse.success(statesList);
+            List<StateAndRef<EvaluationRequestState>> result =  new ArrayList<>();
+            for(int i=statesList.size()-1; i>=0;i--){
+                result.add(statesList.get(i));
+            }
+            return APIResponse.success(result);
         }catch(Exception e){
             return APIResponse.error(e.getMessage());
         }
@@ -117,7 +133,11 @@ public class Controller {
     public APIResponse<List<StateAndRef<CreditScoreState>>> getCreditScoreStatesList() {
         try{
             List<StateAndRef<CreditScoreState>> stateList = activeParty.vaultQuery(CreditScoreState.class).getStates();
-            return APIResponse.success(stateList);
+            List<StateAndRef<CreditScoreState>> result =  new ArrayList<>();
+            for(int i=stateList.size()-1; i>=0;i--){
+                result.add(stateList.get(i));
+            }
+            return APIResponse.success(result);
         }catch(Exception e){
             return APIResponse.error(e.getMessage());
         }
@@ -270,7 +290,7 @@ public class Controller {
     }
 
     @PostMapping(value = "switch-party/{party}")
-    public APIResponse<Void> switchParty(@PathVariable String party){
+    public APIResponse<String> switchParty(@PathVariable String party){
         switch (party){
 //            case "notary" :
 //                activeParty = notaryProxy;
@@ -294,7 +314,7 @@ public class Controller {
                 return APIResponse.error("Unrecognised Party");
         }
 
-        return APIResponse.success();
+        return APIResponse.success((activeParty.nodeInfo().getLegalIdentities()).toString());
     }
 
     @GetMapping("hello")
@@ -560,9 +580,12 @@ public class Controller {
     }
 
     @PostMapping("login")
-    public APIResponse<Void> approveLoanQuote(@RequestBody Forms.LoginForm request){
-        if(request.getUsername() == "kiwitech" && request.getPassword() == "admin@123"){
-            return APIResponse.success();
+    public APIResponse<String> approveLoanQuote(@RequestBody Forms.LoginForm request){
+        System.out.println("us: "+request.getUsername());
+        System.out.println("pw: "+request.getPassword());
+        if(request.getUsername().equals("kiwitech") &&
+                request.getPassword().equals("admin@123")){
+            return APIResponse.success((activeParty.nodeInfo().getLegalIdentities()).toString());
         }
         else return APIResponse.error("Invalid Credentials");
     }
