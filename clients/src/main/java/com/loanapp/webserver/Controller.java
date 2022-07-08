@@ -18,13 +18,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
+
+import java.net.*;
+
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 /**
  * Define your API endpoints here.
@@ -543,6 +547,94 @@ public class Controller {
                     .getReturnValue().get();
 
             return ResponseEntity.created(URI.create("attachments/$hash")).body("Attachment uploaded with hash - ");
+    }
+
+    @PostMapping(path = "uploadTest/{lenders}/{panNumber}/{loanAmount}")
+    public ResponseEntity<String> uploadTest(@PathVariable String lenders,
+                                         @PathVariable String panNumber,@PathVariable int loanAmount) throws IOException, ExecutionException, InterruptedException {
+        try {
+            // APPROACH ONE
+
+//            String oppath = "/home/kiwitech/Desktop";
+//            URLConnection conn = new URL("https://dxvsxo399v3w9.cloudfront.net/3mhn%2Ffile%2F0f441dc45cdfabf4437f7a1b424b19c9_test.zip?response-content-disposition=attachment%3Bfilename%3D%22test.zip%22%3B&response-content-encoding=binary&Expires=1657275979&Signature=DaIBdDDoh9d1YbFSNaZtl1gCxIxCj3snJ2tYVzAcepmxSAtjFqqXmhUV8Ipe~basN~8iEmBHZ430~eqVBayYQqZO~2lc5lqq4h3i074HuBERB4IDEXzs9O9yj4cmaVrm7rZ~4PyKOZfOzF~cMZhoCGlJ2KyuKHcRKivrNmYroWo9Xat9deEYjIaPXDCdHU4~Du5KzBRJ2HLhXAePWUtXHrJkozaFKfDPbgsjtt81Nam5YGxj4wQTHz1mjuWPaQCa-5eeArwpa0~QlS0sekTLXk9PvCcAotUvYazz1KNquHi7Kh0OnOL85Hop-d1OnNjJXfWJYXFLUf0rMd~j1TJnXw__&Key-Pair-Id=APKAJT5WQLLEOADKLHBQ").openConnection();
+//            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+//            conn.setRequestProperty("content-type", "binary/data");
+//            InputStream in = conn.getInputStream();
+//            FileOutputStream out = new FileOutputStream(oppath + "tmp.zip");
+//
+//            byte[] b = new byte[1024];
+//            int count;
+//
+//            while ((count = in.read(b)) > 0) {
+//                out.write(b, 0, count);
+//            }
+//            out.close();
+//            in.close();
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+            // APPROACH TWO
+            String fileURL = "https://dxvsxo399v3w9.cloudfront.net/3mhn%2Ffile%2F0f441dc45cdfabf4437f7a1b424b19c9_test.zip?response-content-disposition=attachment%3Bfilename%3D%22test.zip%22%3B&response-content-encoding=binary&Expires=1657300392&Signature=BUPcDb5pspv6KHPHkY2Hx1ExqjL4eq47f3a-rjsQobjVMl0cmgHXGnHC0s1n7~iDzHpxpcoj2K1oouDPiWpUGn-Aozbf~1gepzEb9v8Xajk2OeV-kScmsPhXjL9vYRWvOxaPIqjbv4m1ztX81LyK3n2yMyo6gm7ZrsUcJj1SyBlFIrxDonKxjc-b35CX4wosj36aArgWgVKlB9UTzBoloQy9DiFHWn9p~WnFPw0s8O5L9ftj~aineqRPGhMpEBHOvWzzHGmJyTVrKG6Vq51lBl0SU5CmH2n7EDZEXhmVZfQ47EbiyO8lMuYI69IbCe4nrvl3iOnVpYRdJRbKqHG2dg__&Key-Pair-Id=APKAJT5WQLLEOADKLHBQ";
+            int BUFFER_SIZE = 4096;
+            String saveDir = "/home/kiwitech/Desktop";
+            URL url = new URL(fileURL);
+            HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+            int responseCode = httpConn.getResponseCode();
+
+            // always check HTTP response code first
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                String fileName = "";
+                String disposition = httpConn.getHeaderField("Content-Disposition");
+                String contentType = httpConn.getContentType();
+                int contentLength = httpConn.getContentLength();
+
+                if (disposition != null) {
+                    // extracts file name from header field
+                    int index = disposition.indexOf("filename=");
+                    if (index > 0) {
+                        fileName = disposition.substring(index + 10,
+                                disposition.length() - 1);
+                    }
+                } else {
+                    // extracts file name from URL
+                    fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1,
+                            fileURL.length());
+                }
+
+                System.out.println("Content-Type = " + contentType);
+                System.out.println("Content-Disposition = " + disposition);
+                System.out.println("Content-Length = " + contentLength);
+                System.out.println("fileName = " + fileName);
+
+                // opens input stream from the HTTP connection
+                InputStream inputStream = httpConn.getInputStream();
+                String saveFilePath = saveDir + File.separator + fileName;
+
+                // opens an output stream to save into file
+                FileOutputStream outputStream = new FileOutputStream(saveFilePath);
+
+                int bytesRead = -1;
+                byte[] buffer = new byte[BUFFER_SIZE];
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+
+                outputStream.close();
+                inputStream.close();
+
+                System.out.println("File downloaded");
+            } else {
+                System.out.println("No file to download. Server replied HTTP code: " + responseCode);
+            }
+            httpConn.disconnect();
+
+        } catch (IOException e) {
+        e.getMessage();
+        }
+        return ResponseEntity.created(URI.create("attachments/$hash")).body("Attachment uploaded with hash - ");
+
     }
 
     @PostMapping("download-attachment")
